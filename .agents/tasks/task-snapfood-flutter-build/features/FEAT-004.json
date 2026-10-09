@@ -1,0 +1,52 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "All five screens wired with Riverpod providers and go_router, migrating the full UI from the existing main.dart scaffold. Preserves every visual design detail: Material 3 green theme, SAMPLE banners, MOCK badges, OnDeviceBadge on every screen. Error states for all failure scenarios. Depends on FEAT-001 (router/theme/shell), FEAT-002 (domain models), FEAT-003 (providers, adaptation service).",
+  "status": "pending",
+  "steps": [
+    "Create lib/features/home/home_controller.dart. Class HomeController is a ConsumerWidget helper (or a plain class used by HomeScreen). Provides: reference to bundleProvider, preferencesProvider, modelStatusProvider. No business logic in this FEAT — that lives in providers.",
+
+    "Create lib/features/home/home_screen.dart. Migrate the HomeScreen UI exactly from main.dart _SnapFoodHomeState. Use ConsumerWidget. Watch bundleProvider (show CircularProgressIndicator while loading, error Text on error). Show the green hero card with 'DORM COOKING, MADE SIMPLE' eyebrow, headline, 'Scan ingredients' FilledButton (navigates to '/scan' via context.go('/scan')), 'Add ingredients manually' OutlinedButton (navigates to '/review'). Show _SampleNotice widget (migrate from main.dart). Show the 'THE IDEA' section. Show OnDeviceBadge watching modelStatusProvider. All text and colors identical to main.dart.",
+
+    "Create lib/features/scan/scan_controller.dart. ScanController extends StateNotifier<ScanState>. Manages the camera lifecycle: init() requests camera permission (using camera package CameraController), on denial sets state to error with message. In this FEAT, the real camera stream is not yet connected — implement the mock path fully: when kDebugMode, use MockDetector cycling through sample ingredient ids; call addFrame() on the Accumulator every scan.intervalMs milliseconds using a Timer.periodic. dispose() cancels the timer and disposes CameraController if initialized. Expose the Accumulator's detected set via a getter.",
+
+    "Create lib/features/scan/scan_screen.dart. ConsumerStatefulWidget. Shows camera preview area (if camera initialized, show CameraPreview; if mock, show the dark placeholder container with MOCK CAMERA tag — preserve exact dimensions h:228 from main.dart). Shows running detected ingredient chips. Shows 'Choose photo' button using image_picker (ImagePicker.pickImage, then on result call scanController.analyzePhoto(file) — stub this method for now returning the first chip from MockDetector). Shows 'Add next MOCK detection' debug-only button (kDebugMode guard). Shows Done button that navigates to '/review'. Shows OnDeviceBadge. Shows SAMPLE notice. Handles camera permission denied: show a message offering photo fallback. Handles 'nothing detected': show 'No live detections. Try the photo option or add manually.'",
+
+    "Create lib/features/review/review_controller.dart. Class ReviewController uses ownedIngredientsProvider and preferencesProvider. Methods: addIngredient(String id), removeIngredient(String id), clearIngredients(), setEquipment(Set<Equipment>), setBudget(int).",
+
+    "Create lib/features/review/review_screen.dart. ConsumerStatefulWidget. Migrate from main.dart _ReviewPage exactly. Watch ownedIngredientsProvider (ingredient chips with × delete). Watch bundleProvider for the ingredient search list. Watch preferencesProvider for equipment FilterChips and budget ChoiceChips. Show search TextField filtering by Filipino/English/alias. Show 'Cooking equipment' section with all four Equipment values as FilterChips. Show 'Extra budget' section with ChoiceChips for [0,30,50,100]. Show 'Find recipes' FilledButton (disabled if equipment is empty) that calls resultsProvider and navigates to '/results'. Show SAMPLE notice. Show OnDeviceBadge. If equipment is empty after user clears all, show inline message 'Select at least one piece of equipment'.",
+
+    "Create lib/features/results/results_controller.dart. Reads resultsProvider. No additional state.",
+
+    "Create lib/features/results/results_screen.dart. ConsumerWidget. Migrate from main.dart _ResultsPage. Show 'Recipe ideas' with 'A few good matches' heading. Map List<RecipeResult> from resultsProvider to recipe Cards (each card shows SAMPLE BASE RECIPE tag, recipe name in Filipino and English, minutes, ownership ratio tag, estimated extra cost tag, overBudget and lowMatch tags in orange when flagged). Card tap navigates to '/recipe/${result.base.id}' passing result via GoRouter extra. If results list is empty, show _EmptyState with 'No recipes for that setup' and explanation. Show SAMPLE notice. Show OnDeviceBadge.",
+
+    "Create lib/features/detail/detail_controller.dart. DetailController is a StateNotifierProvider.family keyed by recipe id. On creation it starts adaptation via AdaptationService using the recipe from bundleProvider and ownedIngredientsProvider. Listens to the adapt() stream and updates AdaptationState. When the widget is disposed, calls adaptationService.cancel().",
+
+    "Create lib/features/detail/detail_screen.dart. ConsumerStatefulWidget. Migrate from main.dart _DetailPage and extend it. Receives String id from GoRouterState.pathParameters. Look up base recipe from bundleProvider by id. Watch adaptationProvider(id) for AdaptationState. Sections to render: (a) SAMPLE notice; (b) recipe name (fil + en) with minutes and equipment tags; (c) model status banner: if adapted, show green 'Adapted by model'; if fallback, show amber 'NOT ADAPTED BY MODEL — Base recipe shown'; if loading, show streaming preview of raw tokens with a live token count; (d) 'You already have' section: owned AdaptedIngredients (green check icon, OWNED tag) or fallback to base recipe owned; (e) 'Substitutions' section for source==substituted (show replaces relationship); (f) 'Additional items' section with estimated cost from prices (source==toBuy or base recipe missing) labeled as estimates; (g) numbered Method steps; (h) Notes from AdaptedRecipe if adapted; (i) OnDeviceBadge. Back button navigates to '/results' without rescanning (GoRouter handles this via context.pop()).",
+
+    "Create lib/features/shared/sample_notice.dart and lib/features/shared/tag_widget.dart. Migrate _SampleNotice and _Tag from main.dart into these shared widgets so all screens can import them without circular deps.",
+
+    "Update lib/app/router.dart to replace placeholder screen stubs with the real screen imports from each features/ folder. Pass RecipeResult via GoRouter extra for the '/recipe/:id' route.",
+
+    "Implement all error states per PRD 17.9 and task T12: camera permission denied → ScanScreen shows offer to use photo picker; model file missing → DetailScreen shows 'Setup Required — models not installed'; model failed to load → DetailScreen shows error with retry button; nothing detected after scan → ScanScreen shows manual entry prompt; no recipe matches equipment → ResultsScreen empty state explaining equipment filter; generation timed out → DetailScreen shows fallback base recipe labeled 'NOT ADAPTED BY MODEL'; fell back to base recipe → DetailScreen shows amber banner 'NOT ADAPTED BY MODEL'."
+  ],
+  "acceptance_criteria": [
+    "All five screens (HomeScreen, ScanScreen, ReviewScreen, ResultsScreen, DetailScreen) are ConsumerWidgets/ConsumerStatefulWidgets watching Riverpod providers",
+    "Navigation uses context.go() / context.push() / context.pop() via go_router — no Navigator.push() calls",
+    "Every screen shows OnDeviceBadge",
+    "Every screen that uses sample data shows SAMPLE notice",
+    "MockDetector is only instantiated in debug mode (kDebugMode guard)",
+    "All 7 error states from PRD 17.9 are handled with useful messages",
+    "DetailScreen shows 'NOT ADAPTED BY MODEL' banner for fallback results",
+    "DetailScreen shows streaming token preview while generation is running",
+    "ReviewScreen 'Find recipes' button is disabled when equipment set is empty",
+    "flutter analyze reports no issues",
+    "flutter test passes"
+  ],
+  "verification": [
+    "cd C:\\Users\\jolyn\\APPBUILDERS && C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat analyze",
+    "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

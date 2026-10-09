@@ -1,0 +1,10 @@
+[
+  {"id":"itlog","nameFil":"Itlog","nameEn":"Egg","aliases":["eggs"]},
+  {"id":"kanin","nameFil":"Kanin","nameEn":"Cooked rice","aliases":["rice"]},
+  {"id":"bigas","nameFil":"Bigas","nameEn":"Rice","aliases":["uncooked rice"]},
+  {"id":"kamatis","nameFil":"Kamatis","nameEn":"Tomato","aliases":["tomatoes"]},
+  {"id":"sibuyas","nameFil":"Sibuyas","nameEn":"Onion","aliases":["onions"]},
+  {"id":"bawang","nameFil":"Bawang","nameEn":"Garlic","aliases":["garlic cloves"]},
+  {"id":"toyo","nameFil":"Toyo","nameEn":"Soy sauce","aliases":["soy sauce"]},
+  {"id":"mantika","nameFil":"Mantika","nameEn":"Cooking oil","aliases":["oil"]}
+]

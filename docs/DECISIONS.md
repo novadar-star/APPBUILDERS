@@ -1,0 +1,52 @@
+# Decisions and prototype limits
+
+- 2026-10-09: Repository had no Flutter scaffold, model files, or team-verified dataset. Built a dependency-free Flutter prototype and marked all bundled sample recipes, ingredients, and prices as SAMPLE in the UI and data. Price figures are fictional and are not market guidance.
+- Vision and language model bindings were not added because no model artifacts/device target were supplied and package support/licensing have not been evaluated. The scan flow is an explicit debug MOCK simulation; this is not camera inference and must not be presented as live on-device AI.
+- Real model state remains Setup required. There is no cloud inference, HTTP client, analytics, account, or INTERNET manifest permission in this scaffold.
+- The sample recipe method text is illustrative. Team members must review equipment safety and recipe steps before real use.
+- Flutter is not installed on the current execution environment, so this prototype could not be launched here.
+
+## Packages added FEAT-001
+- flutter_riverpod: 3.4.3 (pub.dev, supports Android, state management)
+- go_router: 18.0.2 (pub.dev, supports Android, declarative routing)
+- camera: 0.12.1 (pub.dev, supports Android, camera stream)
+- image_picker: 1.2.4 (pub.dev, supports Android, photo fallback)
+- shared_preferences: 2.5.6 (pub.dev, supports Android, preferences persistence)
+- path_provider: 2.1.6 (pub.dev, supports Android, file paths for LLM model)
+- mocktail: 1.0.5 (pub.dev, dev-only, mocking in tests)
+
+## T7 — llama.cpp binding not selected
+
+No llama.cpp Flutter binding has been added to `pubspec.yaml`. `LlamaCppEngine` exists in `lib/ml/llama_cpp_engine.dart` and implements `LlmEngine`, but every method throws `UnimplementedError` with a descriptive message.
+
+**Reason:** Three candidates are under evaluation — `fllama`, `llama_cpp_dart`, and `flutter_gemma`. The team must verify Android ABI support (armeabi-v7a / arm64-v8a) and confirm license compatibility on the actual target device before adding any native binding. Adding prematurely can break Android builds silently.
+
+**Next steps:** Once the device target and `.gguf` model artifact are confirmed, pick one binding, add it to `pubspec.yaml`, and implement `LlamaCppEngine.load()` / `generate()`. Reference: PRD §17.8.
+
+Until then, the app runs with `MockLlmEngine` in debug mode and will throw in release mode if `LlamaCppEngine` is reached.
+
+## T6 — tflite_flutter not added
+
+`tflite_flutter` was **not** added to `pubspec.yaml`. `TfliteClassifierDetector` exists in `lib/ml/tflite_detector.dart` and implements `IngredientDetector`, but every method throws `UnimplementedError` with a descriptive message.
+
+**Reason:** The team must verify Android ABI support (armeabi-v7a / arm64-v8a) and confirm the model artifact format before the native binding can be safely added. Adding it prematurely can break Android builds silently. Once the device target is confirmed and `.tflite` files are available, add `tflite_flutter` to `pubspec.yaml` and implement `TfliteClassifierDetector.load()` / `predict()`. Reference: PRD §17.6.
+
+Until then, the app runs with `MockDetector` in debug mode and will throw in release mode if `TfliteClassifierDetector` is reached.
+
+## T0 scaffold — 2026-10-09
+
+### Package versions pinned for Dart SDK 3.5.4 (Flutter 3.24.5)
+The versions listed in FEAT-001 were specified against a future Dart SDK (3.9–3.12). Flutter 3.24.5 ships Dart 3.5.4, so the following downward-compatible versions were resolved:
+- flutter_riverpod: 2.6.1 (was 3.4.3 — 3.x requires Dart ≥3.7; 2.6.1 is compatible and fully stable)
+- go_router: 14.5.0 (was 18.0.2 — 18.x requires Dart ≥3.12; 14.5.0 requires Dart ≥3.3)
+- camera: 0.11.0+2 (was 0.12.1 — 0.12.x requires Dart ≥3.12; 0.11.0+2 requires Dart ≥3.3)
+- image_picker: 1.1.2 (was 1.2.4 — 1.2.x requires Dart ≥3.11; 1.1.2 requires Dart ≥3.3)
+- shared_preferences: 2.5.3 (was 2.5.6 — 2.5.6 requires Dart ≥3.11; 2.5.3 requires Dart ≥3.5)
+- path_provider: 2.1.4 (was 2.1.6 — 2.1.6 requires Dart ≥3.10; 2.1.4 requires Dart ≥3.2)
+- mocktail: 1.0.5 — no change required, already compatible
+
+### AndroidManifest.xml
+No android/ folder exists in the workspace at this time. Flutter creates the android/ folder on first build. The manifest will be reviewed at that point to ensure INTERNET permission is not present.
+
+### Folder scaffold created
+lib/app/, lib/core/, lib/domain/, lib/data/, lib/ml/, lib/features/{home,scan,review,results,detail}/, lib/shared/ created with stub files and placeholder screens. main.dart replaced with thin entry point calling AppShell.

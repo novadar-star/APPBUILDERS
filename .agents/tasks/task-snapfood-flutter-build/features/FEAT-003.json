@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "ML layer: detector interface + MockDetector, LlmEngine interface + MockLlmEngine, ModelStore, AdaptationService with retry/fallback/events, and all Riverpod providers. Depends on FEAT-001 (pubspec + folder layout) and FEAT-002 (domain models, parser, validators, prompt builder). Independent of FEAT-004 (screens).",
+  "status": "pending",
+  "steps": [
+    "Create lib/ml/detector.dart. Define: class Prediction { final String ingredientId; final double confidence; const Prediction(this.ingredientId, this.confidence); }. Abstract class IngredientDetector { bool get isMock; Future<void> load(); Future<List<Prediction>> predict(dynamic frame); Future<void> dispose(); }. No imports from ml/ subpackages.",
+
+    "Create lib/ml/mock_detector.dart. Class MockDetector implements IngredientDetector. Constructor: assert(kDebugMode, 'MockDetector is debug only'). The cycle list of ingredient ids to return is hardcoded as ['itlog','kamatis','bigas','sibuyas','bawang','mantika','kanin','toyo'] (the 8 ingredients from ingredients.json). Each call to predict() advances an internal _index and returns a Prediction for the current id with confidence 0.85 plus random jitter (dart:math Random, ±0.1). bool isMock => true. load() is a no-op. dispose() is a no-op.",
+
+    "Create lib/ml/llm_engine.dart. Abstract class LlmEngine { bool get isMock; Future<void> load(String modelPath); Stream<String> generate(String prompt, {required int maxTokens, required double temperature, required double topP}); Future<void> cancel(); Future<void> dispose(); }.",
+
+    "Create lib/ml/mock_llm_engine.dart. Class MockLlmEngine implements LlmEngine. Constructor: assert(kDebugMode, 'MockLlmEngine is debug only'). bool isMock => true. generate() yields the following canned response token by token (split on spaces, 50ms delay per token using Future.delayed): 'NAME: Arroz Caldo sa Rice Cooker\\nTIME: 30\\nINGREDIENTS:\\n- owned | 0.5 cup | bigas\\n- owned | 1 pc | itlog\\n- buy | 1 clove | bawang\\nSTEPS:\\n1. Rinse the rice and add to the cooker with 2 cups water.\\n2. Cook on warm setting until porridge-like, about 25 minutes.\\n3. Top with the boiled egg.\\nNOTES: Use rice cooker warm setting for best results.\\nEND'. The generate method must be cancellable: check a _cancelled flag before each delay, and if cancel() was called, stop yielding. load() and dispose() are no-ops.",
+
+    "Create lib/ml/model_store.dart. Enum ModelStatus { missing, present, loading, ready, failed, mock }. Class ModelStore: uses path_provider's getExternalStorageDirectory() to build the model file path (subdirectory 'models', file 'model.gguf' — or read filename from a config constant). Has a ModelStatus _status field. Method Future<void> checkFile() sets status to present if file exists and size > 0, missing otherwise. Method Future<void> load(LlmEngine engine) tries engine.load(modelPath), sets status to loading then ready on success, failed on exception. Getter ModelStatus get status. Stream<ModelStatus> get statusStream using a StreamController. Call checkFile() in constructor (but do not auto-load). The 'mock' status is set externally when MockLlmEngine is active.",
+
+    "Create lib/domain/adaptation_service.dart. Sealed class AdaptationEvent with subtypes: AdaptationStarted, AdaptationToken(String text), AdaptationParsed(AdaptedRecipe recipe), AdaptationRetrying(List<String> errors), AdaptationFellBack(Recipe base), AdaptationFailed(String reason). Class AdaptationService: constructor takes LlmEngine engine, LlmConfig config, List<Ingredient> vocab. Method Stream<AdaptationEvent> adapt(AdaptRequest req): (1) emit AdaptationStarted, (2) build prompt via buildPrompt(), (3) stream tokens from engine.generate() with config settings, emit AdaptationToken for each, accumulate full text, (4) on stream complete call parseResponse() then validate(), (5) if errors: emit AdaptationRetrying, retry once with 'Previous attempt had these problems: [error list]' appended to prompt, parse and validate again, (6) if second failure OR engine throws OR timeout (llm.timeoutSeconds via Future.any with a timeout future): emit AdaptationFellBack(req.base) and return a RecipeResult(kind: ResultKind.fallbackBase, base: req.base, adapted: null, estimatedExtraPesos: 0, flags: []); (7) on success emit AdaptationParsed and return RecipeResult(kind: ResultKind.adapted, base: req.base, adapted: recipe, estimatedExtraPesos: computed from prices, flags: unpricedIds.map((_) => 'unpricedItem').toSet().toList()). Method Future<void> cancel() calls engine.cancel().",
+
+    "Create lib/app/providers.dart. Define all Riverpod providers using flutter_riverpod 3.x API (use Notifier/AsyncNotifier, not deprecated StateNotifier where possible, but StateNotifierProvider is acceptable for compatibility): configProvider (FutureProvider<AppConfig> loading config), bundleProvider (FutureProvider<AppBundle> loading bundle), preferencesProvider (StateNotifierProvider<PreferencesNotifier, Preferences> — PreferencesNotifier extends StateNotifier<Preferences>, loads on init via PreferencesStore, saves on state change), modelStoreProvider (Provider<ModelStore>), modelStatusProvider (StreamProvider<ModelStatus> watching ModelStore.statusStream), ownedIngredientsProvider (StateProvider<Set<String>> initial empty set), scanControllerProvider (StateNotifierProvider<ScanController, ScanState> — ScanState has enum ScanLifecycle { idle, initializing, scanning, error } and a String? errorMessage field — ScanController stub only in FEAT-003; scan screen wires it in FEAT-004), resultsProvider (Provider<List<RecipeResult>> derived from bundleProvider + ownedIngredientsProvider + preferencesProvider using retrieve() — returns empty list while bundle/prefs are loading), adaptationProvider (StateNotifierProvider.family<AdaptationNotifier, AdaptationState, String> keyed by recipe id — AdaptationState holds AdaptationEvent? lastEvent, RecipeResult? result, bool isRunning — AdaptationNotifier uses AdaptationService).",
+
+    "Write a brief smoke-test in test/adaptation_service_test.dart: using MockLlmEngine in a test (guarded by a check that kDebugMode is true in test environment), verify that adapt() emits AdaptationStarted, then one or more AdaptationToken events, then AdaptationParsed (since the canned response is valid), and the returned RecipeResult has kind == ResultKind.adapted. Use a minimal AdaptRequest with one owned ingredient and recipe r001 from the sample data."
+  ],
+  "acceptance_criteria": [
+    "lib/ml/detector.dart, lib/ml/mock_detector.dart, lib/ml/llm_engine.dart, lib/ml/mock_llm_engine.dart, lib/ml/model_store.dart all exist and compile",
+    "MockDetector and MockLlmEngine assert kDebugMode in their constructors",
+    "lib/domain/adaptation_service.dart emits all defined AdaptationEvent subtypes in the correct flow",
+    "lib/app/providers.dart defines all 9 providers with correct types",
+    "test/adaptation_service_test.dart passes (MockLlmEngine canned response passes V1-V8 validation)",
+    "flutter analyze reports no issues",
+    "flutter test passes"
+  ],
+  "verification": [
+    "cd C:\\Users\\jolyn\\APPBUILDERS && C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat analyze",
+    "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat test test/adaptation_service_test.dart"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

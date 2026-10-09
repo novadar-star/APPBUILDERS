@@ -1,0 +1,1 @@
+SETUP REQUIRED: No vision or language model was supplied with the PRD. Add a licensed trained classifier, labels.txt and model_config.json here, plus side-load a compatible GGUF for local recipe adaptation. Do not replace this notice with fabricated model files or benchmark results.

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-snapfood-flutter-build",
+  "task_description": "Build the SnapFood Flutter app for AppBuildersPH Hackathon 2026. Offline-only Filipino dorm cooking app: live ingredient scan (mock), recipe retrieval, local LLM adaptation (mock), Material 3 UI. All 14 tasks from the PRD section 17.13 plan, decomposed into 5 sequential FEATs.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

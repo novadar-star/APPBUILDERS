@@ -1,0 +1,24 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": "tagchip-radius-not-tokenized",
+      "severity": "non-blocking",
+      "description": "tag_chip.dart hardcodes BorderRadius.circular(8) instead of reading theme.extension<SnapFoodShapes>()?.chip. TagChip is used on every results card, detail banner, and scan chips — if the chip token changes it won't follow.",
+      "action": "Inject SnapFoodShapes in TagChip.build and use shapes?.chip ?? 8.0."
+    },
+    {
+      "id": "steprow-badge-radius-not-tokenized",
+      "severity": "non-blocking",
+      "description": "detail_screen.dart _StepRow step-number container hardcodes BorderRadius.circular(8) rather than reading SnapFoodShapes.chip.",
+      "action": "Read theme.extension<SnapFoodShapes>()?.chip ?? 8.0 for the badge border radius."
+    },
+    {
+      "id": "emptystate-illustration-radius-untokenized",
+      "severity": "non-blocking",
+      "description": "empty_state.dart illustration container uses BorderRadius.circular(24) with no backing token in SnapFoodShapes.",
+      "action": "Add an illustration or badge radius token to SnapFoodShapes, or document the 24dp value as an intentional one-off constant."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\jolyn\\APPBUILDERS\\.agents\\tasks\\ui-review.md"
+}
