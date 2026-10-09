@@ -23,33 +23,38 @@ class OnDeviceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final hasMock =
-        visionStatus == BadgeModelStatus.mock || llmStatus == BadgeModelStatus.mock;
-    final hasSetupRequired = visionStatus == BadgeModelStatus.setupRequired ||
+        visionStatus == BadgeModelStatus.mock ||
+        llmStatus == BadgeModelStatus.mock;
+    final hasSetupRequired =
+        visionStatus == BadgeModelStatus.setupRequired ||
         llmStatus == BadgeModelStatus.setupRequired;
     final isLoading = visionStatus == BadgeModelStatus.loading ||
         llmStatus == BadgeModelStatus.loading;
     final bothReady =
-        visionStatus == BadgeModelStatus.ready && llmStatus == BadgeModelStatus.ready;
+        visionStatus == BadgeModelStatus.ready &&
+        llmStatus == BadgeModelStatus.ready;
 
     final String label;
     final Color iconColor;
 
     if (hasMock) {
       label = 'On-device models · MOCK';
-      iconColor = const Color(0xFFB07B3A);
+      iconColor = colorScheme.primary;
     } else if (hasSetupRequired) {
       label = 'On-device models · Setup required';
-      iconColor = const Color(0xFF596357);
+      iconColor = colorScheme.onSurfaceVariant;
     } else if (isLoading) {
       label = 'On-device models · Loading...';
-      iconColor = const Color(0xFF596357);
+      iconColor = colorScheme.onSurfaceVariant;
     } else if (bothReady) {
       label = 'On-device models · Ready';
-      iconColor = const Color(0xFF267450);
+      iconColor = const Color(0xFF388E3C);
     } else {
       label = 'On-device models · Setup required';
-      iconColor = const Color(0xFF596357);
+      iconColor = colorScheme.onSurfaceVariant;
     }
 
     final String subtitle;
@@ -64,7 +69,7 @@ class OnDeviceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDECE5),
+        color: colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -77,13 +82,18 @@ class OnDeviceBadge extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold),
                 ),
-                Text(subtitle, style: const TextStyle(fontSize: 12)),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant),
+                ),
               ],
             ),
           ),
-          if (hasMock) const _MockTag(),
+          if (hasMock) _MockTag(),
         ],
       ),
     );
@@ -105,23 +115,27 @@ class OnDeviceMini extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final hasMock =
-        visionStatus == BadgeModelStatus.mock || llmStatus == BadgeModelStatus.mock;
+        visionStatus == BadgeModelStatus.mock ||
+        llmStatus == BadgeModelStatus.mock;
     final bothReady =
-        visionStatus == BadgeModelStatus.ready && llmStatus == BadgeModelStatus.ready;
+        visionStatus == BadgeModelStatus.ready &&
+        llmStatus == BadgeModelStatus.ready;
 
     final String tag;
     final Color color;
 
     if (hasMock) {
       tag = 'ON DEVICE · MOCK';
-      color = const Color(0xFFB07B3A);
+      color = colorScheme.primary;
     } else if (bothReady) {
       tag = 'ON DEVICE · READY';
-      color = const Color(0xFF267450);
+      color = const Color(0xFF388E3C);
     } else {
       tag = 'ON DEVICE · SETUP REQD';
-      color = const Color(0xFF596357);
+      color = colorScheme.onSurfaceVariant;
     }
 
     return Row(
@@ -131,8 +145,7 @@ class OnDeviceMini extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           tag,
-          style: TextStyle(
-            fontSize: 9,
+          style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
             color: color,
@@ -218,18 +231,19 @@ class _MockTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE1C8),
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: const Text(
+      child: Text(
         'MOCK',
-        style: TextStyle(
-          fontSize: 10,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: 0.25,
+          color: colorScheme.onPrimaryContainer,
         ),
       ),
     );

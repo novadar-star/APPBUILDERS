@@ -1,0 +1,25 @@
+{
+  "project_type": "Flutter mobile app, single-package, Android primary target, offline-only",
+  "language": "Dart 3, null safety",
+  "build_system": "Flutter stable channel 3.24.5. Flutter SDK at C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat. Use this exact path in every command. Workspace root is C:\\Users\\jolyn\\APPBUILDERS.",
+  "test_framework": "flutter_test (built-in) + mocktail 1.0.5. Run tests with: C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat test",
+  "build_command": "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat build apk --debug (for smoke-check; real demo uses --release)",
+  "test_command": "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat test && C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat analyze",
+  "verification_instructions": "After every FEAT: (1) run 'flutter analyze' — must report 'No issues found'; (2) run 'flutter test' — all tests must pass. Flutter binary: C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat. Run all commands from the workspace root C:\\Users\\jolyn\\APPBUILDERS.",
+  "snapshot_or_generated_files": "None. No build_runner, no code generation.",
+  "environment_constraints": "Flutter is NOT on PATH. Always use the full path: C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat. Never run 'flutter' bare. No INTERNET permission may be added to AndroidManifest.xml (android\\app\\src\\main\\AndroidManifest.xml). No http, dio, firebase_*, or analytics packages. Mock classes must be guarded by assert(kDebugMode). The LLM model file does not exist — keep ModelStore in 'missing' state. Windows PowerShell shell.",
+  "contribution_requirements": "Every task ends with flutter analyze clean and flutter test passing. Every new package must be recorded in docs/DECISIONS.md. Sample data screens must show SAMPLE label. Mock-active screens must show MOCK badge. See PRD section 17.1 for full ground rules.",
+  "key_patterns": "Existing main.dart is a single-file scaffold with StatefulWidget-based navigation (Navigator.push), Material 3 theme (seed Color(0xFF1C684E), background Color(0xFFF7F5EF)), _Tag widget for colored label chips, _SampleNotice widget for orange SAMPLE banner, _ModelStatus for on-device status card, _MiniStatus for AppBar status row. All these visual patterns must be preserved and migrated into the new feature files. The existing Bundle class, Ingredient, RecipeIngredient, Recipe, and retrieve() function are the ground truth for data models — the new domain/models.dart expands them with immutable const constructors and fromJson. Prices loaded from prices.json entries array keyed by ingredientId.",
+  "relevant_files": [
+    "lib/main.dart (source of all current UI — migrate, do not delete until T11 is done)",
+    "pubspec.yaml (update with new packages)",
+    "assets/data/ingredients.json (8 ingredients: itlog, kanin, bigas, kamatis, sibuyas, bawang, toyo, mantika)",
+    "assets/data/recipes.json (3 recipes: r001 riceCooker, r002 microwave+stove, r003 riceCooker+microwave)",
+    "assets/data/prices.json (prices for all 8 ingredients)",
+    "assets/config/app_config.json (all tunable config values)",
+    "assets/models/ (directory exists, models/ sub-assets declared; no model files yet)",
+    "android/app/src/main/AndroidManifest.xml (must have CAMERA permission, no INTERNET)",
+    "docs/DECISIONS.md (append package versions here)"
+  ],
+  "directory_structure": "lib/ (main.dart only, becomes thin entry point), assets/data/, assets/models/, assets/config/, android/app/src/main/ (AndroidManifest.xml), test/, docs/, tool/. New lib/ subdirectories: app/, core/, domain/, data/, ml/, features/home/, features/scan/, features/review/, features/results/, features/detail/, features/shared/."
+}

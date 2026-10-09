@@ -31,11 +31,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   // Local copy of confirmed set so we can reflect removals instantly.
   Set<String> _detected = {};
   bool _accumulatorReady = false;
+  // Track which ids have already been animated.
+  final Set<String> _animatedIds = {};
 
   @override
   void initState() {
     super.initState();
-    // Start the simulation after the first frame so providers are available.
     WidgetsBinding.instance.addPostFrameCallback((_) => _initScanner());
   }
 
@@ -80,22 +81,21 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     }
   }
 
-  /// Manually trigger one mock detection (for the debug button).
   Future<void> _addMockDetection() async {
     await _onMockTick();
   }
 
   void _removeIngredient(String id) {
-    setState(() => _detected.remove(id));
+    setState(() {
+      _detected.remove(id);
+      _animatedIds.remove(id);
+    });
     _accumulator?.reset();
-    if (_detected.isNotEmpty) {
-      // Re-seed the accumulator so removed items don't re-appear immediately.
-    }
   }
 
   void _onDone() {
-    // Persist to shared provider then navigate to review.
-    ref.read(ownedIngredientsProvider.notifier).state = Set<String>.from(_detected);
+    ref.read(ownedIngredientsProvider.notifier).state =
+        Set<String>.from(_detected);
     context.go('/review');
   }
 
@@ -129,75 +129,154 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
   Widget _buildBody(BuildContext context) {
     final theme = Theme.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SampleNotice(),
-          const SizedBox(height: 12),
+    final colorScheme = theme.colorScheme;
 
-          // Dark camera viewfinder
-          _MockCameraBox(),
-          const SizedBox(height: 12),
+    return Stack(
+      children: [
+        // ── Main content ──────────────────────────────────────────────────
+        Positioned.fill(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SampleNotice(),
+                const SizedBox(height: 12),
 
-          // Detected chips below viewfinder
-          if (_detected.isNotEmpty) ...[
-            Text(
-              'Detected ingredients',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: const Color(0xFF596357),
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
+                // Dark camera viewfinder
+                _MockCameraBox(
+                  detected: _detected,
+                  accentColor: colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+
+                if (_detected.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'No ingredients detected yet. Pan around or add manually.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                // Debug button
+                if (kDebugMode) ...[
+                  OutlinedButton.icon(
+                    onPressed: _addMockDetection,
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: const Text('Add next MOCK detection'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
             ),
-            const SizedBox(height: 8),
-            _DetectedChips(
-              detected: _detected,
-              onRemove: _removeIngredient,
-            ),
-            const SizedBox(height: 8),
-          ],
+          ),
+        ),
 
-          if (_detected.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'No ingredients detected yet. Pan around or add manually.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          const SizedBox(height: 12),
+        // ── Detected ingredients bottom sheet ─────────────────────────────
+        if (_detected.isNotEmpty)
+          DraggableScrollableSheet(
+            initialChildSize: 0.25,
+            minChildSize: 0.15,
+            maxChildSize: 0.6,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                  children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'DETECTED INGREDIENTS',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        letterSpacing: 1.2,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: _detected.map((id) {
+                        final isNew = !_animatedIds.contains(id);
+                        if (isNew) {
+                          // Schedule marking as animated after build
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() => _animatedIds.add(id));
+                            }
+                          });
+                        }
+                        return AnimatedOpacity(
+                          opacity: isNew ? 0.0 : 1.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                          child: InputChip(
+                            avatar: Icon(Icons.check_circle,
+                                size: 16, color: colorScheme.primary),
+                            label: Text(id),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () => _removeIngredient(id),
+                            backgroundColor: colorScheme.primaryContainer,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
 
-          // Debug button
-          if (kDebugMode) ...[
-            OutlinedButton.icon(
-              onPressed: _addMockDetection,
-              icon: const Icon(Icons.add_circle_outline, size: 18),
-              label: const Text('Add next MOCK detection'),
-            ),
-            const SizedBox(height: 10),
-          ],
-
-          // Done button
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: _onDone,
-              child: const Text(
-                'Done — go to review',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        // ── Done CTA pinned at bottom ─────────────────────────────────────
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                height: 52,
+                child: FilledButton(
+                  onPressed: _onDone,
+                  child: const Text(
+                    'Done — go to review',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // OnDevice badge
-          const OnDeviceBadgeConsumer(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -207,8 +286,17 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 // ---------------------------------------------------------------------------
 
 class _MockCameraBox extends StatelessWidget {
+  final Set<String> detected;
+  final Color accentColor;
+
+  const _MockCameraBox({
+    required this.detected,
+    required this.accentColor,
+  });
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       height: 280,
       decoration: BoxDecoration(
@@ -217,12 +305,30 @@ class _MockCameraBox extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          // Semi-transparent accent fill when ingredients detected
+          if (detected.isNotEmpty)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+
           // Corner brackets
-          _buildCornerBracket(Alignment.topLeft, isTop: true, isLeft: true),
-          _buildCornerBracket(Alignment.topRight, isTop: true, isLeft: false),
-          _buildCornerBracket(Alignment.bottomLeft, isTop: false, isLeft: true),
           _buildCornerBracket(
-              Alignment.bottomRight, isTop: false, isLeft: false),
+              Alignment.topLeft, isTop: true, isLeft: true,
+              color: accentColor),
+          _buildCornerBracket(
+              Alignment.topRight, isTop: true, isLeft: false,
+              color: accentColor),
+          _buildCornerBracket(
+              Alignment.bottomLeft, isTop: false, isLeft: true,
+              color: accentColor),
+          _buildCornerBracket(
+              Alignment.bottomRight, isTop: false, isLeft: false,
+              color: accentColor),
 
           // MOCK CAMERA tag (debug only)
           if (kDebugMode)
@@ -230,31 +336,31 @@ class _MockCameraBox extends StatelessWidget {
               top: 12,
               left: 12,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE1C8),
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
+                child: Text(
                   'MOCK CAMERA',
-                  style: TextStyle(
-                    fontSize: 10,
+                  style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
-                    color: Color(0xFF7A4A1E),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
                   ),
                 ),
               ),
             ),
 
           // Center label
-          const Center(
+          Center(
             child: Text(
               'Point at your ingredients',
-              style: TextStyle(
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: Colors.white54,
-                fontSize: 14,
               ),
             ),
           ),
@@ -267,6 +373,7 @@ class _MockCameraBox extends StatelessWidget {
     Alignment alignment, {
     required bool isTop,
     required bool isLeft,
+    required Color color,
   }) {
     return Positioned(
       top: isTop ? 16 : null,
@@ -277,24 +384,30 @@ class _MockCameraBox extends StatelessWidget {
         width: 24,
         height: 24,
         child: CustomPaint(
-          painter: _CornerPainter(top: isTop, left: isLeft),
+          painter: _CornerPainter(
+              top: isTop, left: isLeft, color: color),
         ),
       ),
     );
   }
 }
 
-/// Single green corner bracket of the mock viewfinder.
+/// Single accent-colored corner bracket of the mock viewfinder.
 class _CornerPainter extends CustomPainter {
   final bool top;
   final bool left;
+  final Color color;
 
-  const _CornerPainter({required this.top, required this.left});
+  const _CornerPainter({
+    required this.top,
+    required this.left,
+    required this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF4CAF50)
+      ..color = color
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.square;
@@ -309,39 +422,6 @@ class _CornerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CornerPainter old) => false;
-}
-
-// ---------------------------------------------------------------------------
-// _DetectedChips
-// ---------------------------------------------------------------------------
-
-class _DetectedChips extends StatelessWidget {
-  final Set<String> detected;
-  final void Function(String id) onRemove;
-
-  const _DetectedChips({required this.detected, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    if (detected.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      children: detected
-          .map(
-            (id) => InputChip(
-              avatar: const Icon(Icons.check_circle,
-                  size: 16, color: Color(0xFF1C684E)),
-              label: Text(id),
-              deleteIcon: const Icon(Icons.close, size: 16),
-              onDeleted: () => onRemove(id),
-              backgroundColor: const Color(0xFFE5EEE5),
-              labelStyle: const TextStyle(fontSize: 13),
-            ),
-          )
-          .toList(),
-    );
-  }
+  bool shouldRepaint(_CornerPainter old) =>
+      old.color != color || old.top != top || old.left != left;
 }

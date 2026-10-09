@@ -5,3 +5,4 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - android/**
+    - web/**

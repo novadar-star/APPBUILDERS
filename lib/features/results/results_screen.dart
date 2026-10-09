@@ -2,6 +2,7 @@
 // Shows up to 3 recipes ranked by retrieval.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
@@ -25,6 +26,9 @@ class ResultsScreen extends ConsumerWidget {
     final ownedIds = ref.watch(ownedIngredientsProvider);
     final prefsAsync = ref.watch(preferencesProvider);
 
+    final isLoading =
+        bundleAsync.isLoading || prefsAsync.isLoading;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recipes for you'),
@@ -36,10 +40,10 @@ class ResultsScreen extends ConsumerWidget {
         ],
       ),
       body: bundleAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _SkeletonColumn(),
         error: (e, _) => Center(child: Text('Error loading recipes: $e')),
         data: (bundle) => prefsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => _SkeletonColumn(),
           error: (e, _) =>
               Center(child: Text('Error loading preferences: $e')),
           data: (prefs) {
@@ -54,8 +58,131 @@ class ResultsScreen extends ConsumerWidget {
             return _ResultsList(
               results: results,
               prefs: prefs,
+              isLoading: isLoading,
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _SkeletonCard
+// ---------------------------------------------------------------------------
+
+class _SkeletonCard extends StatefulWidget {
+  const _SkeletonCard();
+
+  @override
+  State<_SkeletonCard> createState() => _SkeletonCardState();
+}
+
+class _SkeletonCardState extends State<_SkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.4, end: 1.0).animate(_ctrl);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AnimatedBuilder(
+        animation: _opacity,
+        builder: (context, _) => Opacity(
+          opacity: _opacity.value,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title bar
+                  Container(
+                    height: 24,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Line 1 — 80%
+                  FractionallySizedBox(
+                    widthFactor: 0.80,
+                    child: Container(
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Line 2 — 95%
+                  FractionallySizedBox(
+                    widthFactor: 0.95,
+                    child: Container(
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Line 3 — 70%
+                  FractionallySizedBox(
+                    widthFactor: 0.70,
+                    child: Container(
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonColumn extends StatelessWidget {
+  const _SkeletonColumn();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: const [
+            _SkeletonCard(),
+            _SkeletonCard(),
+            _SkeletonCard(),
+          ],
         ),
       ),
     );
@@ -69,12 +196,18 @@ class ResultsScreen extends ConsumerWidget {
 class _ResultsList extends StatelessWidget {
   final List<RecipeResult> results;
   final Preferences prefs;
+  final bool isLoading;
 
-  const _ResultsList({required this.results, required this.prefs});
+  const _ResultsList({
+    required this.results,
+    required this.prefs,
+    required this.isLoading,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -86,19 +219,33 @@ class _ResultsList extends StatelessWidget {
             const SampleNotice(),
             const SizedBox(height: 16),
 
+            // ── Loading indicator ─────────────────────────────────────────
+            if (isLoading) ...[
+              Text(
+                'Adapting recipe…',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // ── Heading ──────────────────────────────────────────────────
             Text(
               'A few good matches',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0E3D2A),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Ranked by ingredients you have, estimated cost, and cooking time.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 16),
@@ -112,10 +259,15 @@ class _ResultsList extends StatelessWidget {
                     'Try adding another piece of equipment or ingredient.',
               )
             else
-              ...results.map((r) => _RecipeCard(
-                    result: r,
-                    prefs: prefs,
-                  )),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: results.length,
+                itemBuilder: (context, i) => _RecipeCard(
+                  result: results[i],
+                  prefs: prefs,
+                ),
+              ),
 
             const SizedBox(height: 16),
 
@@ -142,20 +294,22 @@ class _RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final recipe = result.base;
     final overBudget = result.flags.contains('overBudget');
     final lowMatch = result.flags.contains('lowMatch');
 
-    // Core owned ratio — approximate from flags (lowMatch means <50%).
-    // Compute a display %. We don't have exact here so use lowMatch flag.
     final coreTotal = recipe.ingredients.where((i) => i.core).length;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: () => context.go('/recipe/${recipe.id}'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            context.go('/recipe/${recipe.id}');
+          },
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -166,21 +320,21 @@ class _RecipeCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    const TagChip(
+                    TagChip(
                       text: 'SAMPLE BASE RECIPE',
-                      color: Color(0xFFE5EEE5),
-                      textColor: Color(0xFF1C684E),
+                      color: colorScheme.primaryContainer,
+                      textColor: colorScheme.onPrimaryContainer,
                     ),
                     TagChip(
                       text: '${recipe.minutes} min',
-                      color: const Color(0xFFF0EEE6),
-                      textColor: const Color(0xFF596357),
+                      color: colorScheme.surfaceContainerHigh,
+                      textColor: colorScheme.onSurfaceVariant,
                     ),
                     if (lowMatch)
-                      const TagChip(
+                      TagChip(
                         text: 'LOW INGREDIENT MATCH',
-                        color: Color(0xFFFFE1C8),
-                        textColor: Color(0xFF7A4A1E),
+                        color: colorScheme.tertiaryContainer,
+                        textColor: colorScheme.onTertiaryContainer,
                       ),
                   ],
                 ),
@@ -191,7 +345,7 @@ class _RecipeCard extends StatelessWidget {
                   recipe.nameFil,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0E3D2A),
+                    color: colorScheme.onSurface,
                     fontSize: 22,
                   ),
                 ),
@@ -200,7 +354,7 @@ class _RecipeCard extends StatelessWidget {
                 Text(
                   recipe.nameEn,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -216,21 +370,20 @@ class _RecipeCard extends StatelessWidget {
                             ? '< 50% core ingredients owned'
                             : '≥ 50% core ingredients owned',
                         color: lowMatch
-                            ? const Color(0xFFFFF3CD)
-                            : const Color(0xFFD4EBD8),
+                            ? colorScheme.tertiaryContainer
+                            : colorScheme.primaryContainer,
                         textColor: lowMatch
-                            ? const Color(0xFF856404)
-                            : const Color(0xFF1C684E),
+                            ? colorScheme.onTertiaryContainer
+                            : colorScheme.onPrimaryContainer,
                       ),
                     TagChip(
-                      text:
-                          'Extra est. ₱${result.estimatedExtraPesos}',
+                      text: 'Extra est. ₱${result.estimatedExtraPesos}',
                       color: overBudget
-                          ? const Color(0xFFFFE1C8)
-                          : const Color(0xFFF0EEE6),
+                          ? colorScheme.errorContainer
+                          : colorScheme.surfaceContainerHigh,
                       textColor: overBudget
-                          ? const Color(0xFF7A4A1E)
-                          : const Color(0xFF596357),
+                          ? colorScheme.onErrorContainer
+                          : colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -242,13 +395,13 @@ class _RecipeCard extends StatelessWidget {
                     Text(
                       'See recipe',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF1C684E),
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward,
-                        size: 16, color: Color(0xFF1C684E)),
+                    Icon(Icons.arrow_forward,
+                        size: 16, color: colorScheme.primary),
                   ],
                 ),
               ],

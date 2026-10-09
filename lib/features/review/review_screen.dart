@@ -2,6 +2,7 @@
 // Confirm owned ingredients + set preferences.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
@@ -26,7 +27,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
 
-  // Local preference state — will be initialised from provider.
   Set<Equipment> _selectedEquipment = {};
   int _extraBudget = 30;
   bool _prefsLoaded = false;
@@ -62,8 +62,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     super.dispose();
   }
 
-  // ── helpers ─────────────────────────────────────────────────────────────
-
   String _equipmentLabel(Equipment e) {
     switch (e) {
       case Equipment.riceCooker:
@@ -78,6 +76,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Future<void> _saveAndNavigate(AppBundle bundle) async {
+    HapticFeedback.lightImpact();
     final owned = ref.read(ownedIngredientsProvider);
     ref.read(ownedIngredientsProvider.notifier).state = owned;
     final prefs = Preferences(
@@ -87,8 +86,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     await PreferencesStore().save(prefs);
     if (mounted) context.go('/results');
   }
-
-  // ── build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +117,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     AppBundle bundle,
     Set<String> ownedIds,
   ) {
-    // Search results — match against nameFil, nameEn, aliases.
+    final colorScheme = theme.colorScheme;
+
     final matchResults = _query.isEmpty
         ? <Ingredient>[]
         : bundle.ingredients.where((ing) {
@@ -133,7 +131,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -141,19 +139,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             const SampleNotice(),
             const SizedBox(height: 16),
 
-            // ── Heading ──────────────────────────────────────────────────
+            // ── INGREDIENTS section header ────────────────────────────────
             Text(
-              'Confirm what you have',
-              style: theme.textTheme.headlineSmall?.copyWith(
+              'INGREDIENTS',
+              style: theme.textTheme.titleSmall?.copyWith(
+                letterSpacing: 1.2,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0E3D2A),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Detected items are suggestions. Tap × to remove, or search to add.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 14),
@@ -169,24 +167,24 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       .firstOrNull;
                   final label = ing?.nameFil ?? id;
                   return InputChip(
-                    avatar: const Icon(Icons.check,
-                        size: 16, color: Color(0xFF1C684E)),
+                    avatar: Icon(Icons.check,
+                        size: 16, color: colorScheme.primary),
                     label: Text(label),
                     deleteIcon: const Icon(Icons.close, size: 16),
                     onDeleted: () {
                       final next = Set<String>.from(ownedIds)..remove(id);
-                      ref.read(ownedIngredientsProvider.notifier).state = next;
+                      ref.read(ownedIngredientsProvider.notifier).state =
+                          next;
                     },
-                    backgroundColor: const Color(0xFFE5EEE5),
-                    labelStyle: const TextStyle(fontSize: 13),
+                    backgroundColor: colorScheme.primaryContainer,
                   );
                 }).toList(),
               ),
             if (ownedIds.isEmpty)
               Text(
                 'No ingredients confirmed yet. Use scan or search below.',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey[500]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant),
               ),
             const SizedBox(height: 14),
 
@@ -197,14 +195,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 hintText: 'Search ingredients (Filipino or English)…',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: colorScheme.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE8E6DE)),
+                  borderSide:
+                      BorderSide(color: colorScheme.outlineVariant),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE8E6DE)),
+                  borderSide:
+                      BorderSide(color: colorScheme.outlineVariant),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 12),
@@ -217,9 +217,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 constraints: const BoxConstraints(maxHeight: 160),
                 margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE8E6DE)),
+                  border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -230,9 +230,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       dense: true,
                       title: Text(ing.nameFil),
                       subtitle: Text(ing.nameEn,
-                          style: const TextStyle(fontSize: 12)),
-                      trailing: const Icon(Icons.add_circle_outline,
-                          size: 20, color: Color(0xFF1C684E)),
+                          style: theme.textTheme.labelSmall),
+                      trailing: Icon(Icons.add_circle_outline,
+                          size: 20, color: colorScheme.primary),
                       onTap: () {
                         final next =
                             Set<String>.from(ownedIds)..add(ing.id);
@@ -265,55 +265,67 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
             // ── Equipment section ────────────────────────────────────────
             Text(
+              'EQUIPMENT',
+              style: theme.textTheme.titleSmall?.copyWith(
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               'Cooking equipment',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0E3D2A),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: Equipment.values.map((eq) {
-                final selected = _selectedEquipment.contains(eq);
-                return FilterChip(
-                  label: Text(_equipmentLabel(eq)),
-                  selected: selected,
-                  onSelected: (val) {
-                    setState(() {
-                      if (val) {
-                        _selectedEquipment.add(eq);
-                      } else {
-                        _selectedEquipment.remove(eq);
-                      }
-                    });
-                  },
-                  selectedColor: const Color(0xFFD4EBD8),
-                  checkmarkColor: const Color(0xFF1C684E),
-                  labelStyle: TextStyle(
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.normal,
-                  ),
-                );
-              }).toList(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: Equipment.values.map((eq) {
+                  final selected = _selectedEquipment.contains(eq);
+                  return FilterChip(
+                    label: Text(_equipmentLabel(eq)),
+                    selected: selected,
+                    onSelected: (val) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        if (val) {
+                          _selectedEquipment.add(eq);
+                        } else {
+                          _selectedEquipment.remove(eq);
+                        }
+                      });
+                    },
+                    selectedColor: colorScheme.primaryContainer,
+                    checkmarkColor: colorScheme.primary,
+                    labelStyle: TextStyle(
+                      fontWeight: selected
+                          ? FontWeight.w700
+                          : FontWeight.normal,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // ── Budget section ───────────────────────────────────────────
             Text(
-              'Extra budget',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0E3D2A),
+              'BUDGET',
+              style: theme.textTheme.titleSmall?.copyWith(
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'How much can you spend on missing ingredients?',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: Colors.grey[600]),
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -327,16 +339,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   onSelected: (val) {
                     if (val) setState(() => _extraBudget = amount);
                   },
-                  selectedColor: const Color(0xFFD4EBD8),
+                  selectedColor: colorScheme.primaryContainer,
                   labelStyle: TextStyle(
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.normal,
+                    fontWeight: selected
+                        ? FontWeight.w700
+                        : FontWeight.normal,
                   ),
                 );
               }).toList(),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // ── OnDevice badge ───────────────────────────────────────────
             const OnDeviceBadgeConsumer(),
@@ -363,8 +376,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 child: Text(
                   'Select at least one piece of equipment to continue.',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: Colors.grey[600]),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant),
                 ),
               ),
             const SizedBox(height: 16),

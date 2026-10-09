@@ -1,20 +1,146 @@
 import 'package:flutter/material.dart';
 
+// ---------------------------------------------------------------------------
+// SnapFoodShapes — ThemeExtension carrying shape radii
+// ---------------------------------------------------------------------------
+
+@immutable
+class SnapFoodShapes extends ThemeExtension<SnapFoodShapes> {
+  const SnapFoodShapes({
+    this.card = 16.0,
+    this.input = 12.0,
+    this.chip = 8.0,
+    this.actionButton = 28.0,
+  });
+
+  final double card;
+  final double input;
+  final double chip;
+  final double actionButton;
+
+  @override
+  SnapFoodShapes copyWith({
+    double? card,
+    double? input,
+    double? chip,
+    double? actionButton,
+  }) {
+    return SnapFoodShapes(
+      card: card ?? this.card,
+      input: input ?? this.input,
+      chip: chip ?? this.chip,
+      actionButton: actionButton ?? this.actionButton,
+    );
+  }
+
+  @override
+  SnapFoodShapes lerp(SnapFoodShapes? other, double t) {
+    if (other == null) return this;
+    return SnapFoodShapes(
+      card: lerpDouble(this.card, other.card, t)!,
+      input: lerpDouble(this.input, other.input, t)!,
+      chip: lerpDouble(this.chip, other.chip, t)!,
+      actionButton: lerpDouble(this.actionButton, other.actionButton, t)!,
+    );
+  }
+
+  static double? lerpDouble(double? a, double? b, double t) {
+    if (a == null && b == null) return null;
+    a ??= 0.0;
+    b ??= 0.0;
+    return a + (b - a) * t;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Light theme
+// ---------------------------------------------------------------------------
+
 ThemeData buildAppTheme() {
+  const seed = Color(0xFFE07A2F);
+  final colorScheme = ColorScheme.fromSeed(seedColor: seed);
+
+  return _buildFromColorScheme(colorScheme);
+}
+
+// ---------------------------------------------------------------------------
+// Dark theme
+// ---------------------------------------------------------------------------
+
+ThemeData buildDarkTheme() {
+  const seed = Color(0xFFE07A2F);
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: Brightness.dark,
+  );
+
+  return _buildFromColorScheme(colorScheme);
+}
+
+// ---------------------------------------------------------------------------
+// Shared builder
+// ---------------------------------------------------------------------------
+
+ThemeData _buildFromColorScheme(ColorScheme colorScheme) {
+  const shapes = SnapFoodShapes();
+
   return ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: const Color(0xFFF7F5EF),
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1C684E),
-      surface: const Color(0xFFF7F5EF),
-    ),
+    colorScheme: colorScheme,
+    scaffoldBackgroundColor: colorScheme.surface,
     fontFamily: 'Roboto',
-    cardTheme: CardTheme(
-      color: Colors.white,
+    extensions: const [shapes],
+
+    // Card
+    cardTheme: CardThemeData(
+      color: colorScheme.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: const BorderSide(color: Color(0xFFE8E6DE)),
+        borderRadius: BorderRadius.circular(shapes.card),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
+    ),
+
+    // Input
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: colorScheme.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(shapes.input),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(shapes.input),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(shapes.input),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+      ),
+    ),
+
+    // Chips
+    chipTheme: ChipThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(shapes.chip),
+      ),
+    ),
+
+    // FilledButton — pill shape
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(shapes.actionButton),
+        ),
+      ),
+    ),
+
+    // OutlinedButton — pill shape
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(shapes.actionButton),
+        ),
       ),
     ),
   );

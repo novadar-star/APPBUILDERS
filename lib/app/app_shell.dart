@@ -13,6 +13,7 @@ class AppShell extends StatelessWidget {
         title: 'SnapFood',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
+        darkTheme: buildDarkTheme(),
         routerConfig: appRouter,
       ),
     );

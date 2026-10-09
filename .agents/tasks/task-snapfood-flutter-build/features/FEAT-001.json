@@ -1,0 +1,47 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Scaffold: pubspec with pinned packages, folder layout, theme, router, app shell, AndroidManifest. Transforms the project from a bare single-file app into the full layered structure ready for feature code. All screens are placeholder stubs; the app must run and analyze clean after this FEAT.",
+  "status": "pending",
+  "steps": [
+    "Update pubspec.yaml. Under 'dependencies' add exactly: flutter_riverpod: 3.4.3, go_router: 18.0.2, camera: 0.12.1, image_picker: 1.2.4, shared_preferences: 2.5.6, path_provider: 2.1.6. Under 'dev_dependencies' add: mocktail: 1.0.5. Keep flutter SDK dependency, flutter_test SDK dev dependency, uses-material-design: true, and all existing asset declarations (assets/data/ingredients.json, assets/data/recipes.json, assets/data/prices.json, assets/config/app_config.json, assets/models/). Do NOT add http, dio, firebase_*, or any analytics package.",
+
+    "Append to docs/DECISIONS.md the package decisions block: '## Packages added FEAT-001\\n- flutter_riverpod: 3.4.3 (pub.dev, supports Android, state management)\\n- go_router: 18.0.2 (pub.dev, supports Android, declarative routing)\\n- camera: 0.12.1 (pub.dev, supports Android, camera stream)\\n- image_picker: 1.2.4 (pub.dev, supports Android, photo fallback)\\n- shared_preferences: 2.5.6 (pub.dev, supports Android, preferences persistence)\\n- path_provider: 2.1.6 (pub.dev, supports Android, file paths for LLM model)\\n- mocktail: 1.0.5 (pub.dev, dev-only, mocking in tests)'",
+
+    "Create or update android/app/src/main/AndroidManifest.xml. Must include <uses-permission android:name='android.permission.CAMERA'/> inside the <manifest> tag. Must NOT include <uses-permission android:name='android.permission.INTERNET'/>. Keep the existing application block (activity, intent-filter, metadata) intact. If the file does not exist, create a minimal valid AndroidManifest.xml for Flutter with the applicationId com.example.snapfood, CAMERA permission, and the standard FlutterActivity setup.",
+
+    "Create lib/app/theme.dart: export a single AppTheme class with a static ThemeData get light method. Theme must use Material 3 (useMaterial3: true), ColorScheme.fromSeed with seedColor Color(0xFF1C684E), scaffoldBackgroundColor Color(0xFFF7F5EF), cardTheme with white card color, elevation 0, RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: Color(0xFFE8E6DE))). Preserve every visual detail from the existing main.dart SnapFoodApp ThemeData block.",
+
+    "Create lib/features/shared/on_device_badge.dart: stateless widget OnDeviceBadge. Accepts a ModelStatus enum (defined in lib/ml/model_store.dart in FEAT-003, use a local forward-compatible stub: enum ModelStatus { missing, present, loading, ready, failed, mock } for now). Renders a compact Row with a phone_android icon, status text, and a colored tag chip. When status is mock, show 'ON DEVICE · MOCK' in amber. When missing, show 'Setup Required'. When ready, show 'Ready' in green. Always visible. This widget replaces _MiniStatus and _ModelStatus from main.dart.",
+
+    "Create lib/app/router.dart: define a GoRouter instance (exported as appRouter) with five GoRoute entries: path '/' → HomeScreen (placeholder), path '/scan' → ScanScreen (placeholder), path '/review' → ReviewScreen (placeholder), path '/results' → ResultsScreen (placeholder), path '/recipe/:id' → DetailScreen (placeholder, receives id from pathParameters). Import placeholder screen stubs from each feature folder. Use GoRouter's extra parameter for passing data between screens (not Navigator.push).",
+
+    "Create lib/app/app_shell.dart: MaterialApp.router using appRouter and AppTheme.light. Wraps with ProviderScope at the top-level in main.dart.",
+
+    "Replace lib/main.dart with a thin entry point: void main() => runApp(const ProviderScope(child: AppShell())); Import only ProviderScope from flutter_riverpod and AppShell from lib/app/app_shell.dart. Remove all the old scaffold code.",
+
+    "Create placeholder stub screen files — each is a minimal Scaffold with an AppBar showing the screen name and a centered Text('TODO'). This makes the router importable and the app compilable. Files to create: lib/features/home/home_screen.dart (class HomeScreen), lib/features/scan/scan_screen.dart (class ScanScreen), lib/features/review/review_screen.dart (class ReviewScreen), lib/features/results/results_screen.dart (class ResultsScreen), lib/features/detail/detail_screen.dart (class DetailScreen, accepts String id from GoRouterState.pathParameters).",
+
+    "Create lib/core/logger.dart: a simple wrapper around dart:developer log(). Expose four static methods: Logger.d(msg), Logger.i(msg), Logger.w(msg), Logger.e(msg, {error, stackTrace}). In release builds (kReleaseMode) the debug/info/warn methods are no-ops.",
+
+    "Run 'flutter pub get' to resolve dependencies, then run 'flutter analyze' and 'flutter test'. Expect analyze to report no errors. There are no tests yet so flutter test passes trivially."
+  ],
+  "acceptance_criteria": [
+    "pubspec.yaml contains exactly the six runtime packages at their pinned versions with no http, dio, firebase_*, or analytics packages",
+    "docs/DECISIONS.md contains the package decisions block with all seven packages and versions",
+    "android/app/src/main/AndroidManifest.xml contains CAMERA permission and does NOT contain INTERNET permission",
+    "lib/app/theme.dart, lib/app/router.dart, lib/app/app_shell.dart exist and compile",
+    "lib/main.dart is a thin entry point (ProviderScope + AppShell only)",
+    "All five placeholder screen files exist and compile",
+    "lib/features/shared/on_device_badge.dart and lib/core/logger.dart exist and compile",
+    "flutter analyze reports no errors",
+    "flutter test passes"
+  ],
+  "verification": [
+    "cd C:\\Users\\jolyn\\APPBUILDERS && C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat pub get",
+    "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat analyze",
+    "C:\\Users\\jolyn\\Downloads\\flutter_windows_3.24.5-stable\\flutter\\bin\\flutter.bat test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
