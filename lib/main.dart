@@ -4,10 +4,8 @@ import 'package:device_preview/device_preview.dart';
 import 'package:snapfood/app/app_shell.dart';
 
 void main() => runApp(
-      kDebugMode
-          ? DevicePreview(
-              enabled: true,
-              builder: (context) => const AppShell(),
-            )
-          : const AppShell(),
+      DevicePreview(
+        enabled: !kReleaseMode, // shows in debug & profile, off in release
+        builder: (context) => const AppShell(),
+      ),
     );

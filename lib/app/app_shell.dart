@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:snapfood/app/router.dart';
@@ -15,6 +16,10 @@ class AppShell extends StatelessWidget {
         theme: buildAppTheme(),
         darkTheme: buildDarkTheme(),
         routerConfig: appRouter,
+        // DevicePreview hooks — safe to leave in; no-ops when DevicePreview
+        // is disabled or not in the widget tree.
+        locale: DevicePreview.locale(context),
+        builder: DevicePreview.appBuilder,
       ),
     );
   }

@@ -1,27 +1,35 @@
-// HomeScreen — T9 (curated asymmetric layout, Apple HIG pass)
+// HomeScreen
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
-import 'package:snapfood/app/theme.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/sample_notice.dart';
-
-// Pantry words shown in the hero mosaic — Filipino staples, dorm-friendly
-const List<String> _pantryWords = [
-  'Toyo', 'Bawang', 'Sibuyas', 'Kamatis', 'Asin',
-  'Mantika', 'Itlog', 'Bigas', 'Paminta', 'Luya',
-];
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  Future<void> _pickPhoto(BuildContext context, WidgetRef ref) async {
+    final picker = ref.read(photoPickerProvider);
+    final path = await picker.pickPhoto();
+    if (path == null) return;
+    // Photo picked — feed through the detector (mock returns top-3)
+    final detector = ref.read(detectorProvider);
+    final predictions = await detector.predictFromFile(path);
+    if (predictions.isNotEmpty) {
+      final ids = predictions.map((p) => p.ingredientId).toSet();
+      ref.read(ownedIngredientsProvider.notifier).state = ids;
+    }
+    if (context.mounted) context.go('/review');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ownedIngredients = ref.watch(ownedIngredientsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final shapes = theme.extension<SnapFoodShapes>();
 
     return Scaffold(
       body: SafeArea(
@@ -32,24 +40,25 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 24),
 
-              // ── Upper hero zone — mosaic top-right, title bottom-left ──
+              // Upper hero zone
               SizedBox(
                 height: 200,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Ingredient mosaic — upper right
+                    // Nova hero — idle until ingredients scanned, then happy
                     Positioned(
                       top: 0,
                       right: 0,
-                      child: _IngredientMosaic(
-                        words: _pantryWords,
-                        colorScheme: colorScheme,
-                        shapes: shapes,
+                      child: NovaWidget(
+                        state: ownedIngredients.isEmpty
+                            ? NovaState.idle
+                            : NovaState.happy,
+                        size: 160,
                       ),
                     ),
 
-                    // Title — bottom left, w700 (reserve w800 for recipe names)
+                    // Title bottom left
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -57,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
                       child: Text(
                         "What's in your\nkitchen?",
                         style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                           color: colorScheme.onSurface,
                         ),
@@ -69,7 +78,6 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // ── Subtitle ────────────────────────────────────────────────
               Text(
                 'Sweep your camera over your ingredients and we\'ll find something to cook.',
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -80,40 +88,34 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // ── SAMPLE DATA notice ──────────────────────────────────────
               const SampleNotice(),
 
-              // ── Ingredient count — InkWell with 44dp min target + haptic ──
+              // Ingredient count chip if any confirmed
               if (ownedIngredients.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Material(
-                  color: colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(shapes?.input ?? 12),
-                  child: InkWell(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      context.go('/review');
-                    },
-                    borderRadius: BorderRadius.circular(shapes?.input ?? 12),
-                    child: Container(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle,
-                              size: 16, color: colorScheme.primary),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${ownedIngredients.length} ingredient${ownedIngredients.length == 1 ? '' : 's'} confirmed — tap to review',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                GestureDetector(
+                  onTap: () => context.go('/review'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle,
+                            size: 16, color: colorScheme.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${ownedIngredients.length} ingredient${ownedIngredients.length == 1 ? '' : 's'} confirmed \u2014 tap to review',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -121,7 +123,7 @@ class HomeScreen extends ConsumerWidget {
 
               const Spacer(),
 
-              // ── On-device badge — one canonical placement, bottom center ──
+              // Offline indicator
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -136,7 +138,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'runs on your phone',
+                      'runs on your phone \u00b7 works offline',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -147,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // ── Primary CTA ─────────────────────────────────────────────
+              // Primary CTA
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -165,88 +167,43 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // ── Secondary CTA — haptic added ────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    context.go('/review');
-                  },
-                  icon: const Icon(Icons.edit_note),
-                  label: const Text(
-                    'Add ingredients manually',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+              // Secondary CTAs — manual entry + photo picker
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go('/review'),
+                        icon: const Icon(Icons.edit_note),
+                        label: const Text(
+                          'Manual entry',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickPhoto(context, ref),
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text(
+                          'Choose photo',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 32),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// _IngredientMosaic — pantry word cloud, product-specific hero element
-// ---------------------------------------------------------------------------
-
-class _IngredientMosaic extends StatelessWidget {
-  final List<String> words;
-  final ColorScheme colorScheme;
-  final SnapFoodShapes? shapes;
-
-  const _IngredientMosaic({
-    required this.words,
-    required this.colorScheme,
-    required this.shapes,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // Alternate between two tones for visual rhythm
-    final colors = [
-      colorScheme.primaryContainer,
-      colorScheme.surfaceContainerHigh,
-    ];
-    final textColors = [
-      colorScheme.onPrimaryContainer,
-      colorScheme.onSurfaceVariant,
-    ];
-
-    return SizedBox(
-      width: 160,
-      height: 160,
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: words.asMap().entries.map((entry) {
-          final i = entry.key;
-          final word = entry.value;
-          final bg = colors[i % 2];
-          final fg = textColors[i % 2];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius:
-                  BorderRadius.circular(shapes?.chip ?? 8.0),
-            ),
-            child: Text(
-              word,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.1,
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

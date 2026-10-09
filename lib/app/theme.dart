@@ -2,6 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ---------------------------------------------------------------------------
+// Nova design tokens
+// ---------------------------------------------------------------------------
+// Derived from Nova's body palette. Use these everywhere in the app so the
+// UI stays consistent with the mascot. Nova's body colors are FIXED — do not
+// alter them for dark mode. Only surfaces behind Nova change.
+
+abstract final class NovaColors {
+  /// Cream — light surfaces, cards, Nova's body
+  static const cream = Color(0xFFF6E7C1);
+
+  /// Yellow — highlights, active states, Nova's face
+  static const yellow = Color(0xFFFFC93C);
+
+  /// Orange — secondary accent
+  static const orange = Color(0xFFFF9F2E);
+
+  /// Green — primary actions, Nova's camera / leaf
+  static const green = Color(0xFF5E8F57);
+
+  /// Dark green — pressed states, outlines on green elements
+  static const darkGreen = Color(0xFF2F5D31);
+
+  /// Brown — primary text, Nova's eyes / outlines
+  static const brown = Color(0xFF4A2C1A);
+
+  // ── Surfaces (darken in dark mode) ────────────────────────────────────────
+
+  /// Light mode app background
+  static const backgroundLight = Color(0xFFFFFBF0);
+
+  /// Dark mode app background
+  static const backgroundDark = Color(0xFF1D1913);
+
+  /// Light mode card / panel
+  static const surfaceLight = Color(0xFFFFFFFF);
+
+  /// Dark mode card / panel
+  static const surfaceDark = Color(0xFF292318);
+
+  /// Light mode stage / tinted surface
+  static const stageLight = Color(0xFFFFF3CF);
+
+  /// Dark mode stage / tinted surface
+  static const stageDark = Color(0xFF332B1B);
+
+  /// Divider / border — light
+  static const lineLight = Color(0xFFEADFC4);
+
+  /// Divider / border — dark
+  static const lineDark = Color(0xFF40372A);
+}
+
+// ---------------------------------------------------------------------------
 // SnapFoodShapes — ThemeExtension carrying shape radii
 // ---------------------------------------------------------------------------
 
@@ -64,10 +117,23 @@ class SnapFoodShapes extends ThemeExtension<SnapFoodShapes> {
 // ---------------------------------------------------------------------------
 
 ThemeData buildAppTheme() {
-  const seed = Color(0xFFE07A2F);
-  final colorScheme = ColorScheme.fromSeed(seedColor: seed);
+  // Primary: Nova's green. Secondary: Nova's orange. Tertiary: Nova's yellow.
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: NovaColors.green,
+    primary: NovaColors.green,
+    onPrimary: Colors.white,
+    secondary: NovaColors.orange,
+    onSecondary: NovaColors.brown,
+    tertiary: NovaColors.yellow,
+    onTertiary: NovaColors.brown,
+    surface: NovaColors.surfaceLight,
+    onSurface: NovaColors.brown,
+    surfaceContainerHigh: NovaColors.stageLight,
+    outline: NovaColors.lineLight,
+    outlineVariant: NovaColors.lineLight,
+  );
 
-  return _buildFromColorScheme(colorScheme);
+  return _buildFromColorScheme(colorScheme, background: NovaColors.backgroundLight);
 }
 
 // ---------------------------------------------------------------------------
@@ -75,26 +141,36 @@ ThemeData buildAppTheme() {
 // ---------------------------------------------------------------------------
 
 ThemeData buildDarkTheme() {
-  const seed = Color(0xFFE07A2F);
   final colorScheme = ColorScheme.fromSeed(
-    seedColor: seed,
+    seedColor: NovaColors.green,
     brightness: Brightness.dark,
+    primary: const Color(0xFF8DBF84), // lighter green for dark mode
+    onPrimary: NovaColors.backgroundDark,
+    secondary: NovaColors.orange,
+    onSecondary: NovaColors.backgroundDark,
+    tertiary: NovaColors.yellow,
+    onTertiary: NovaColors.backgroundDark,
+    surface: NovaColors.surfaceDark,
+    onSurface: const Color(0xFFF4EAD2),
+    surfaceContainerHigh: NovaColors.stageDark,
+    outline: NovaColors.lineDark,
+    outlineVariant: NovaColors.lineDark,
   );
 
-  return _buildFromColorScheme(colorScheme);
+  return _buildFromColorScheme(colorScheme, background: NovaColors.backgroundDark);
 }
 
 // ---------------------------------------------------------------------------
 // Shared builder
 // ---------------------------------------------------------------------------
 
-ThemeData _buildFromColorScheme(ColorScheme colorScheme) {
+ThemeData _buildFromColorScheme(ColorScheme colorScheme, {Color? background}) {
   const shapes = SnapFoodShapes();
 
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: colorScheme.surface,
+    scaffoldBackgroundColor: background ?? colorScheme.surface,
     textTheme: GoogleFonts.nunitoTextTheme(colorScheme.brightness == Brightness.dark
         ? ThemeData.dark().textTheme
         : ThemeData.light().textTheme),

@@ -1,9 +1,10 @@
+// NOTE: AndroidManifest.xml needs <uses-permission android:name="android.permission.CAMERA"/> once android/ is generated.
 // ScanScreen — T9
-// Mock camera simulation. No real CameraImage is passed in debug mode;
-// MockDetector.simulateFrame() is called directly on each timer tick.
+// Real CameraPreview with MockDetector frame simulation in debug mode.
 
 import 'dart:async';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
 import 'package:snapfood/domain/accumulator.dart';
 import 'package:snapfood/ml/mock_detector.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/on_device_badge.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 
@@ -33,6 +36,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   bool _accumulatorReady = false;
   // Track which ids have already been animated.
   final Set<String> _animatedIds = {};
+
+  // Camera fields
+  CameraController? _cameraController;
+  String? _cameraError;
+
+  // Nova viewfinder state
+  NovaState _novaViewfinderState = NovaState.idle;
+  Timer? _novaHappyTimer;
 
   @override
   void initState() {
@@ -66,6 +77,39 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         (_) => _onMockTick(),
       );
     }
+
+    await _initCamera();
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(() => _cameraError = 'No camera available.');
+        return;
+      }
+      final camera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras[0],
+      );
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      await _cameraController!.initialize();
+      if (!mounted) return;
+      setState(() {});
+    } on CameraException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'CameraAccessDenied') {
+        setState(() => _cameraError =
+            'Camera permission denied. Please allow camera access in Settings.');
+      } else {
+        setState(() => _cameraError =
+            e.description ?? 'Camera unavailable. Please restart the app.');
+      }
+    }
   }
 
   Future<void> _onMockTick() async {
@@ -75,9 +119,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     if (!mounted) return;
     _accumulator?.addFrame(predictions);
     final newDetected = Set<String>.from(_accumulator?.detected ?? {});
+    final oldLen = _detected.length;
     if (newDetected.length != _detected.length ||
         !newDetected.every(_detected.contains)) {
       setState(() => _detected = newDetected);
+    }
+    // Update Nova viewfinder state when a new ingredient is detected
+    if (newDetected.length > oldLen) {
+      setState(() => _novaViewfinderState = NovaState.happy);
+      _novaHappyTimer?.cancel();
+      _novaHappyTimer = Timer(const Duration(milliseconds: 1500), () {
+        if (mounted) setState(() => _novaViewfinderState = NovaState.idle);
+      });
     }
   }
 
@@ -102,6 +155,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _cameraController?.dispose();
+    _novaHappyTimer?.cancel();
     super.dispose();
   }
 
@@ -113,7 +168,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('scan ingredients'),
+        title: const Text('Scan Ingredients'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -123,7 +178,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ),
       body: _accumulatorReady
           ? _buildBody(context)
-          : const Center(child: CircularProgressIndicator()),
+          : Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NovaWidget(state: NovaState.thinking, size: 100),
+                  const SizedBox(height: 16),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -143,23 +207,31 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 const SampleNotice(),
                 const SizedBox(height: 12),
 
-                // Dark camera viewfinder
-                _MockCameraBox(
-                  detected: _detected,
-                  accentColor: colorScheme.primary,
-                ),
+                // Real camera viewfinder
+                _buildViewfinder(context),
                 const SizedBox(height: 12),
 
-                if (_detected.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'nothing spotted yet',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                // Photo fallback button
+                TextButton.icon(
+                  onPressed: () async {
+                    final picker = ref.read(photoPickerProvider);
+                    final path = await picker.pickPhoto();
+                    if (path == null) return;
+                    final detector = ref.read(detectorProvider);
+                    final predictions =
+                        await detector.predictFromFile(path);
+                    if (!mounted) return;
+                    // Simulate multi-frame confirmation
+                    _accumulator?.addFrame(predictions);
+                    _accumulator?.addFrame(predictions);
+                    _accumulator?.addFrame(predictions);
+                    final newDetected =
+                        Set<String>.from(_accumulator?.detected ?? {});
+                    setState(() => _detected = newDetected);
+                  },
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('use a photo instead'),
+                ),
 
                 // Debug button
                 if (kDebugMode) ...[
@@ -267,7 +339,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 child: FilledButton(
                   onPressed: _onDone,
                   child: const Text(
-                    'looks good',
+                    'Use This Photo',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -278,91 +350,142 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ],
     );
   }
-}
 
-// ---------------------------------------------------------------------------
-// _MockCameraBox
-// ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // _buildViewfinder — real CameraPreview with Nova overlay
+  // ---------------------------------------------------------------------------
 
-class _MockCameraBox extends StatelessWidget {
-  final Set<String> detected;
-  final Color accentColor;
-
-  const _MockCameraBox({
-    required this.detected,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildViewfinder(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final br = BorderRadius.circular(16);
+    final accentColor = colorScheme.primary;
+
+    final cameraReady = _cameraController != null &&
+        _cameraController!.value.isInitialized;
+
     return Container(
       height: 280,
       decoration: BoxDecoration(
-        color: colorScheme.inverseSurface,
-        borderRadius: BorderRadius.circular(16),
+        // Keep dark fallback background while initializing; transparent once ready
+        color: cameraReady ? Colors.transparent : colorScheme.inverseSurface,
+        borderRadius: br,
       ),
-      child: Stack(
-        children: [
-          // Semi-transparent accent fill when ingredients detected
-          if (detected.isNotEmpty)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(16),
-                ),
+      child: ClipRRect(
+        borderRadius: br,
+        child: Stack(
+          children: [
+            // ── Camera preview fill ────────────────────────────────────
+            if (cameraReady)
+              Positioned.fill(
+                child: CameraPreview(_cameraController!),
               ),
-            ),
 
-          // Corner brackets
-          _buildCornerBracket(
-              Alignment.topLeft, isTop: true, isLeft: true,
-              color: accentColor),
-          _buildCornerBracket(
-              Alignment.topRight, isTop: true, isLeft: false,
-              color: accentColor),
-          _buildCornerBracket(
-              Alignment.bottomLeft, isTop: false, isLeft: true,
-              color: accentColor),
-          _buildCornerBracket(
-              Alignment.bottomRight, isTop: false, isLeft: false,
-              color: accentColor),
-
-          // MOCK CAMERA tag (debug only)
-          if (kDebugMode)
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'MOCK CAMERA',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: colorScheme.onPrimaryContainer,
+            // ── Error state ────────────────────────────────────────────
+            if (_cameraError != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    _cameraError!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onInverseSurface,
+                    ),
                   ),
                 ),
               ),
+
+            // ── Nova idle overlay (before camera ready, no error) ──────
+            if (!cameraReady && _cameraError == null && _detected.isEmpty)
+              Positioned.fill(
+                child: Center(
+                  child: NovaWidget(
+                    state: NovaState.idle,
+                    size: 80,
+                    caption: 'Point me at your plate.',
+                  ),
+                ),
+              ),
+
+            // ── Camera initializing text (not empty, not ready yet) ────
+            if (!cameraReady && _cameraError == null && _detected.isNotEmpty)
+              Center(
+                child: Text(
+                  'Camera initializing…',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onInverseSurface,
+                  ),
+                ),
+              ),
+
+            // ── Corner brackets ────────────────────────────────────────
+            _buildCornerBracket(
+              Alignment.topLeft,
+              isTop: true,
+              isLeft: true,
+              color: accentColor,
+            ),
+            _buildCornerBracket(
+              Alignment.topRight,
+              isTop: true,
+              isLeft: false,
+              color: accentColor,
+            ),
+            _buildCornerBracket(
+              Alignment.bottomLeft,
+              isTop: false,
+              isLeft: true,
+              color: accentColor,
+            ),
+            _buildCornerBracket(
+              Alignment.bottomRight,
+              isTop: false,
+              isLeft: false,
+              color: accentColor,
             ),
 
-          // Center label
-          Center(
-            child: Text(
-              'point at your ingredients',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onInverseSurface.withValues(alpha: 0.7),
+            // ── MOCK CAMERA badge (debug only) ─────────────────────────
+            if (kDebugMode)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'MOCK CAMERA',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+
+            // ── Nova overlay when camera is running ────────────────────
+            if (cameraReady)
+              Positioned(
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: NovaWidget(
+                    state: _novaViewfinderState,
+                    size: 80,
+                    caption: _novaViewfinderState == NovaState.happy
+                        ? null
+                        : 'Point me at your plate.',
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -382,15 +505,18 @@ class _MockCameraBox extends StatelessWidget {
         width: 24,
         height: 24,
         child: CustomPaint(
-          painter: _CornerPainter(
-              top: isTop, left: isLeft, color: color),
+          painter: _CornerPainter(top: isTop, left: isLeft, color: color),
         ),
       ),
     );
   }
 }
 
-/// Single accent-colored corner bracket of the mock viewfinder.
+// ---------------------------------------------------------------------------
+// _CornerPainter
+// ---------------------------------------------------------------------------
+
+/// Single accent-colored corner bracket of the camera viewfinder.
 class _CornerPainter extends CustomPainter {
   final bool top;
   final bool left;

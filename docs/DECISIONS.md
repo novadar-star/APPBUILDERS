@@ -15,15 +15,17 @@
 - path_provider: 2.1.6 (pub.dev, supports Android, file paths for LLM model)
 - mocktail: 1.0.5 (pub.dev, dev-only, mocking in tests)
 
-## T7 — llama.cpp binding not selected
-
-No llama.cpp Flutter binding has been added to `pubspec.yaml`. `LlamaCppEngine` exists in `lib/ml/llama_cpp_engine.dart` and implements `LlmEngine`, but every method throws `UnimplementedError` with a descriptive message.
-
-**Reason:** Three candidates are under evaluation — `fllama`, `llama_cpp_dart`, and `flutter_gemma`. The team must verify Android ABI support (armeabi-v7a / arm64-v8a) and confirm license compatibility on the actual target device before adding any native binding. Adding prematurely can break Android builds silently.
-
-**Next steps:** Once the device target and `.gguf` model artifact are confirmed, pick one binding, add it to `pubspec.yaml`, and implement `LlamaCppEngine.load()` / `generate()`. Reference: PRD §17.8.
-
-Until then, the app runs with `MockLlmEngine` in debug mode and will throw in release mode if `LlamaCppEngine` is reached.
+## T7 — fllama selected as llama.cpp binding — 2026-10-10
+Package: fllama (pub.dev), pinned at 0.0.1
+License: MIT
+Reason: GGUF format, Android arm64-v8a / armeabi-v7a / x86_64, compatible with Dart SDK >=3.3.0,
+streaming token API maps cleanly onto LlmEngine.generate() Stream<String>,
+no minSdk bump required (vs flutter_edge_ai litertlm which requires minSdk 30 and .litertlm format).
+LlamaCppEngine fully implemented: load() via initContext, generate() via completion with
+emitRealtimeCompletion:true + onTokenStream filtering, cancel() via stopCompletion + controller close,
+dispose() via releaseContext. No UnimplementedError remains.
+Next steps: place a quantized .gguf model file (1B–3B, 4-bit) in the device's
+models directory (use ModelStore.getLlmModelPath()), run on physical device and confirm streaming works.
 
 ## T6 — tflite_flutter not added
 
@@ -50,3 +52,8 @@ No android/ folder exists in the workspace at this time. Flutter creates the and
 
 ### Folder scaffold created
 lib/app/, lib/core/, lib/domain/, lib/data/, lib/ml/, lib/features/{home,scan,review,results,detail}/, lib/shared/ created with stub files and placeholder screens. main.dart replaced with thin entry point calling AppShell.
+
+## Mosaic hero — 2026-10-09
+
+Decision: keep the mosaic hero image on the results screen and simplify it. The mosaic stays as the visual hero. No debug overlays or sample-data annotations are present in the mosaic widget in results_screen.dart — the mosaic is already clean. Any 'SAMPLE BASE RECIPE' chip previously rendered on each RecipeCard (separate from the mosaic) has been removed in this cleanup pass.
+

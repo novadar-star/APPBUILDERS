@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nova, FoodSnap's Food Wizard: states</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFBF0;--panel:#fff;--ink:#3A2A1C;--mute:#8A7A62;--line:#EADFC4;--accent:#5E8F57;--stage:#FFF3CF;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1D1913;--panel:#292318;--ink:#F4EAD2;--mute:#B5A685;--line:#40372A;--accent:#8DBF84;--stage:#332B1B}}
+:root[data-theme="dark"]{--bg:#1D1913;--panel:#292318;--ink:#F4EAD2;--mute:#B5A685;--line:#40372A;--accent:#8DBF84;--stage:#332B1B}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:22px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+header{grid-column:1/-1}
+h1{margin:0 0 4px;font-size:24px;font-weight:800}
+header p{margin:0;color:var(--mute);font-size:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px}
+.stage{background:var(--stage);text-align:center;position:relative;overflow:hidden}
+.stage svg{width:100%;max-width:380px;height:auto;display:block;margin:0 auto;overflow:visible}
+.tag{position:absolute;top:14px;left:14px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.bubble{margin:6px auto 0;max-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;font-size:15px}
+#list{display:grid;gap:8px;margin-bottom:14px}
+.st{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:2px 10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--panel)}
+.st:hover{border-color:var(--accent)}
+.st:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.st[aria-pressed=true]{border-color:var(--accent);background:var(--stage)}
+.st .k{grid-row:1/3;align-self:center;width:28px;height:28px;border-radius:8px;background:var(--line);display:grid;place-items:center;font-weight:800;font-size:13px}
+.st b{font-size:16px}
+.st small{color:var(--mute);font-size:13px;line-height:1.35}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;padding:9px 14px;border-radius:99px;background:var(--accent);color:#fff;font-weight:800;font-size:14px}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+pre{margin:0;overflow-x:auto;font-size:12.5px;line-height:1.6;background:var(--stage);border-radius:12px;padding:12px;color:var(--ink)}
+@media (max-width:760px){main{grid-template-columns:minmax(0,1fr)}}
+
+/* mascot */
+.v{display:none}
+svg[data-state=idle] .v-idle,svg[data-state=happy] .v-happy,svg[data-state=thinking] .v-thinking,svg[data-state=error] .v-error,svg[data-state=celebrating] .v-celebrating{display:inline}
+#sq,#nova,#shadow{transform-origin:150px 300px}
+#nova{animation:breathe 3.4s ease-in-out infinite}
+svg[data-state=happy] #nova{animation:hop 1s ease-in-out infinite}
+svg[data-state=thinking] #nova{animation:sway 2.8s ease-in-out infinite}
+svg[data-state=error] #nova{animation:shake 2.4s ease-in-out infinite}
+svg[data-state=celebrating] #nova{animation:jump .85s cubic-bezier(.3,0,.4,1) infinite}
+svg[data-state=celebrating] #shadow{animation:shadowjump .85s cubic-bezier(.3,0,.4,1) infinite}
+svg.pop #sq{animation:pop .4s ease-out}
+.eye{transform-box:fill-box;transform-origin:center;animation:blink 4.2s infinite}
+svg[data-state=idle] #pupils{animation:look 7s ease-in-out infinite}
+svg[data-state=thinking] #pupils{transform:translate(6px,-7px)}
+#pupils{transition:transform .3s}
+#hat{transform-origin:150px 110px}
+svg[data-state=celebrating] #hat{animation:hatb .85s ease-in-out infinite}
+#leaf{transform-origin:188px 100px;animation:leaf 3s ease-in-out infinite}
+svg[data-state=thinking] #leaf{animation-duration:1.2s}
+svg[data-state=celebrating] #leaf{animation-duration:.4s}
+svg[data-state=error] #leaf{animation:none;transform:rotate(38deg);transition:transform .5s}
+.arm{transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+#armL{transform-origin:104px 218px;transform:rotate(var(--l,0deg))}
+#armR{transform-origin:196px 218px;transform:rotate(var(--r,0deg))}
+svg[data-state=idle]{--l:3deg;--r:-3deg}
+svg[data-state=happy]{--l:42deg;--r:-42deg}
+svg[data-state=thinking]{--l:0deg;--r:-155deg}
+svg[data-state=error]{--l:18deg;--r:-18deg}
+svg[data-state=celebrating]{--l:150deg;--r:-150deg}
+svg[data-state=celebrating] #armL{animation:waveL .42s ease-in-out infinite alternate}
+svg[data-state=celebrating] #armR{animation:waveR .42s ease-in-out infinite alternate}
+svg[data-state=thinking] #armR{animation:scratch .5s ease-in-out infinite alternate}
+#scan{transform-origin:150px 261px;animation:spin 1.6s linear infinite}
+.sp{transform-box:fill-box;transform-origin:center;animation:twinkle 1.6s ease-in-out infinite}
+.sp:nth-of-type(2){animation-delay:.4s}.sp:nth-of-type(3){animation-delay:.8s}.sp:nth-of-type(4){animation-delay:1.1s}
+.qm{animation:bob 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.dot{animation:dots 1.2s infinite}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+.drip{animation:drip 1.4s ease-in infinite}
+.scrib{animation:wob .5s ease-in-out infinite alternate}
+#wob{animation:wob .25s ease-in-out infinite alternate}
+.mouthbig{transform-box:fill-box;transform-origin:top center;animation:mouth .42s ease-in-out infinite alternate}
+.cf{animation:fall var(--t) linear infinite;animation-delay:var(--d)}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015,.985)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1.03,.96)}45%{transform:translateY(-14px) scale(.97,1.04)}}
+@keyframes sway{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(-2deg)}}
+@keyframes shake{0%{transform:translateX(0)}4%{transform:translateX(-8px) rotate(-1.5deg)}8%{transform:translateX(8px) rotate(1.5deg)}12%{transform:translateX(-6px)}16%{transform:translateX(6px)}20%{transform:translateX(-3px)}26%,88%{transform:translateY(3px) scale(1.02,.96)}100%{transform:translateX(0)}}
+@keyframes jump{0%,100%{transform:translateY(0) scale(1.1,.88)}20%{transform:translateY(-6px) scale(.96,1.05)}50%{transform:translateY(-52px) scale(.96,1.06)}80%{transform:translateY(-6px) scale(.98,1.03)}}
+@keyframes shadowjump{0%,100%{transform:scale(1.05);opacity:.14}50%{transform:scale(.6);opacity:.06}}
+@keyframes pop{0%{transform:scale(.9,1.1)}50%{transform:scale(1.08,.92)}100%{transform:scale(1)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes look{0%,40%,100%{transform:translateX(0)}50%,65%{transform:translateX(-5px)}75%,90%{transform:translateX(5px)}}
+@keyframes hatb{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px) rotate(-4deg)}}
+@keyframes leaf{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
+@keyframes waveL{from{transform:rotate(132deg)}to{transform:rotate(165deg)}}
+@keyframes waveR{from{transform:rotate(-165deg)}to{transform:rotate(-132deg)}}
+@keyframes scratch{from{transform:rotate(-150deg)}to{transform:rotate(-164deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes twinkle{0%,100%{transform:scale(.2) rotate(0);opacity:0}40%{transform:scale(1.2) rotate(20deg);opacity:1}70%{transform:scale(.9) rotate(30deg);opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(6deg)}}
+@keyframes dots{0%,100%{opacity:.2}40%{opacity:1}}
+@keyframes drip{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(22px);opacity:0}}
+@keyframes wob{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+@keyframes mouth{from{transform:scaleY(.8)}to{transform:scaleY(1.1)}}
+@keyframes fall{0%{transform:translate(var(--x),-30px) rotate(0)}100%{transform:translate(calc(var(--x) + var(--dx)),340px) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Nova, FoodSnap's Food Wizard</h1>
+  <p>Five looping states, each tied to a moment in the app. Switch states any time; Nova eases between them.</p>
+</header>
+
+<section class="card stage" aria-live="polite">
+  <span class="tag" id="tag">Idle</span>
+  <svg id="nova-svg" viewBox="0 0 300 330" data-state="idle" role="img" aria-label="Nova, a cream egg-shaped chef mascot holding a green camera">
+    <defs>
+      <polygon id="st" points="0,-8 2.1,-2.8 7.6,-2.5 3.3,1.1 4.7,6.5 0,3.5 -4.7,6.5 -3.3,1.1 -7.6,-2.5 -2.1,-2.8"/>
+      <g id="hatshape"><circle cx="118" cy="78" r="22"/><circle cx="182" cy="78" r="22"/><circle cx="150" cy="64" r="27"/><rect x="106" y="86" width="88" height="28" rx="12"/></g>
+    </defs>
+    <ellipse id="shadow" cx="150" cy="310" rx="72" ry="9" fill="#000" opacity=".14"/>
+    <g id="sq"><g id="nova">
+      <ellipse cx="116" cy="294" rx="24" ry="12" fill="#F6E7C1" stroke="#B98A55" stroke-width="2.5"/>
+      <ellipse cx="184" cy="294" rx="24" ry="12" fill="#F6E7C1" stroke="#B98A55" stroke-width="2.5"/>
+      <path d="M150 104C215 104 246 160 244 218C242 268 205 296 150 296C95 296 58 268 56 218C54 160 85 104 150 104Z" fill="#F6E7C1" stroke="#B98A55" stroke-width="2.5"/>
+      <path d="M96 160Q84 202 108 246M204 160Q216 202 192 246" stroke="#5E8F57" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <circle cx="150" cy="192" r="60" fill="#FFC93C"/>
+      <ellipse cx="106" cy="208" rx="12" ry="8" fill="#FF8E72" opacity=".75"/>
+      <ellipse cx="194" cy="208" rx="12" ry="8" fill="#FF8E72" opacity=".75"/>
+
+      <g class="v v-idle v-thinking"><g id="pupils">
+        <g class="eye"><ellipse cx="124" cy="188" rx="9" ry="12.5" fill="#4A2C1A"/><circle cx="127" cy="183" r="3.6" fill="#fff"/></g>
+        <g class="eye"><ellipse cx="176" cy="188" rx="9" ry="12.5" fill="#4A2C1A"/><circle cx="179" cy="183" r="3.6" fill="#fff"/></g>
+      </g></g>
+      <path class="v v-happy" d="M112 192Q124 176 136 192M164 192Q176 176 188 192" stroke="#4A2C1A" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <g class="v v-celebrating">
+        <circle cx="124" cy="188" r="13" fill="#4A2C1A"/><use href="#st" x="124" y="188" fill="#FFC93C"/>
+        <circle cx="176" cy="188" r="13" fill="#4A2C1A"/><use href="#st" x="176" y="188" fill="#FFC93C"/>
+      </g>
+      <path class="v v-error" d="M114 178L134 188L114 198M186 178L166 188L186 198" stroke="#4A2C1A" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <path class="v v-idle" d="M137 208Q150 222 163 208" stroke="#4A2C1A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <ellipse class="v v-thinking" cx="158" cy="213" rx="5" ry="4.5" fill="#D9482B" stroke="#4A2C1A" stroke-width="2.5"/>
+      <g class="v v-happy"><path d="M134 204Q150 232 166 204Z" fill="#C9422A" stroke="#4A2C1A" stroke-width="3" stroke-linejoin="round"/><path d="M142 217Q150 211 158 217Q150 224 142 217Z" fill="#FF8E8E"/></g>
+      <g class="v v-celebrating"><g class="mouthbig"><path d="M128 202Q150 242 172 202Z" fill="#C9422A" stroke="#4A2C1A" stroke-width="3" stroke-linejoin="round"/><ellipse cx="150" cy="217" rx="10" ry="6" fill="#FF8E8E"/></g></g>
+      <path id="wob" class="v v-error" d="M135 214Q142 205 150 214T165 214" stroke="#4A2C1A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+      <g id="cam">
+        <rect x="124" y="224" width="26" height="14" rx="5" fill="#4F8A4A" stroke="#2F5D31" stroke-width="2.5"/>
+        <rect x="104" y="232" width="92" height="58" rx="12" fill="#5E8F57" stroke="#2F5D31" stroke-width="2.5"/>
+        <circle cx="150" cy="261" r="21" fill="#E8B83A" stroke="#B98A1E" stroke-width="3"/>
+        <circle cx="150" cy="261" r="15" fill="#2A2A2E"/><circle cx="150" cy="261" r="6" fill="#4a4a55"/>
+        <circle cx="144" cy="255" r="3" fill="#fff" opacity=".9"/>
+        <g class="v v-thinking"><circle id="scan" cx="150" cy="261" r="25" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="8 12" stroke-linecap="round"/></g>
+        <circle cx="184" cy="244" r="3.5" fill="#F6E7C1"/>
+      </g>
+
+      <g id="armL" class="arm"><ellipse cx="100" cy="240" rx="14" ry="22" fill="#F6E7C1" stroke="#B98A55" stroke-width="2.5"/></g>
+      <g id="armR" class="arm"><ellipse cx="200" cy="240" rx="14" ry="22" fill="#F6E7C1" stroke="#B98A55" stroke-width="2.5"/></g>
+
+      <g id="hat">
+        <use href="#hatshape" fill="#B98A55" stroke="#B98A55" stroke-width="5"/>
+        <use href="#hatshape" fill="#FFF4D6"/>
+        <path d="M130 90V112M150 90V112M170 90V112" stroke="#EBD49E" stroke-width="2" stroke-linecap="round"/>
+        <g id="leaf"><path d="M188 100C190 78 212 66 232 70C232 92 214 106 188 100Z" fill="#5E8F57" stroke="#2F5D31" stroke-width="2.5" stroke-linejoin="round"/><path d="M192 98Q210 86 226 74" stroke="#2F5D31" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+      </g>
+    </g></g>
+
+    <g id="fx">
+      <g class="v v-happy">
+        <g transform="translate(66 150) scale(1.7)"><use class="sp" href="#st" fill="#FFC93C"/></g>
+        <g transform="translate(236 128) scale(1.4)"><use class="sp" href="#st" fill="#FFC93C"/></g>
+        <g transform="translate(58 236) scale(1.1)"><use class="sp" href="#st" fill="#FF9F2E"/></g>
+        <g transform="translate(244 206)"><path class="sp" d="M0 -4C0 -10 -10 -10 -10 -3C-10 3 0 8 0 11C0 8 10 3 10 -3C10 -10 0 -10 0 -4Z" fill="#FF9F2E"/></g>
+      </g>
+      <g class="v v-thinking">
+        <text class="qm" x="236" y="100" font-size="46" font-weight="800" fill="#2F5D31" font-family="Nunito,system-ui,sans-serif">?</text>
+        <circle class="dot" cx="214" cy="146" r="3" fill="#5E8F57"/><circle class="dot" cx="222" cy="132" r="4" fill="#5E8F57"/><circle class="dot" cx="226" cy="116" r="5" fill="#5E8F57"/>
+      </g>
+      <g class="v v-error">
+        <path class="drip" transform="translate(212 150)" d="M0 -12Q9 2 0 8Q-9 2 0 -12Z" fill="#7CC4F0" stroke="#3D8FC4" stroke-width="2"/>
+        <path class="scrib" transform="translate(74 130)" d="M0 0C-12 -2 -12 -16 0 -16C12 -16 12 4 -4 4C-18 4 -20 -22 2 -24" stroke="#2F5D31" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </g>
+      <g class="v v-celebrating">
+        <g transform="translate(60 120) scale(1.6)"><use class="sp" href="#st" fill="#FFC93C"/></g>
+        <g transform="translate(244 112) scale(1.8)"><use class="sp" href="#st" fill="#FF9F2E"/></g>
+        <g transform="translate(40 220) scale(1.1)"><use class="sp" href="#st" fill="#FFC93C"/></g>
+        <g transform="translate(262 210) scale(1.2)"><use class="sp" href="#st" fill="#FFC93C"/></g>
+        <g id="confetti"></g>
+      </g>
+    </g>
+  </svg>
+  <div class="bubble" id="bubble">Point me at your plate.</div>
+</section>
+
+<section>
+  <div id="list"></div>
+  <div class="row">
+    <button class="btn" id="p1">Play happy path</button>
+    <button class="btn alt" id="p2">Play error path</button>
+  </div>
+  <pre>nova.setState('idle')         // camera screen
+nova.setState('thinking')     // photo captured
+nova.setState('happy')        // recipe ready
+nova.setState('error')        // food not recognized
+nova.setState('celebrating')  // recipe saved</pre>
+</section>
+</main>
+<script>
+const svg=document.getElementById('nova-svg');
+const S={
+ idle:{n:'Idle',m:'Camera screen, waiting for a photo',l:'Point me at your plate.',x:'Slow breathing, blinks, looks around'},
+ thinking:{n:'Thinking',m:'Photo taken, identifying the dish',l:'Hmm, let me look closer...',x:'Head tilt, scanning lens, thought dots'},
+ happy:{n:'Happy',m:'Dish recognized, recipe ready',l:'Got it! Here is your recipe.',x:'Hop, smiling eyes, sparkles'},
+ error:{n:'Error',m:"Food not recognized, or no connection",l:"Oops, I couldn't tell what that is. Try another angle?",x:'Shake, slump, sweat drop, drooping leaf'},
+ celebrating:{n:'Celebrating',m:'Recipe saved, meal cooked, streak milestone',l:'Recipe saved! Chef Nova approves.',x:'Big jumps, arms up, star eyes, confetti'}
+};
+const list=document.getElementById('list');
+Object.keys(S).forEach((k,i)=>{
+  const b=document.createElement('button');
+  b.className='st';b.dataset.s=k;b.setAttribute('aria-pressed','false');
+  b.innerHTML='<span class="k">'+(i+1)+'</span><b>'+S[k].n+'</b><small>'+S[k].m+'. '+S[k].x+'.</small>';
+  b.onclick=()=>{stop();set(k)};
+  list.appendChild(b);
+});
+let timers=[];
+function stop(){timers.forEach(clearTimeout);timers=[]}
+function set(k){
+  if(!S[k])return;
+  svg.dataset.state=k;
+  svg.classList.remove('pop');void svg.getBoundingClientRect();svg.classList.add('pop');
+  document.getElementById('tag').textContent=S[k].n;
+  document.getElementById('bubble').textContent=S[k].l;
+  list.querySelectorAll('.st').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));
+}
+function play(seq){stop();let t=0;seq.forEach(([s,d])=>{timers.push(setTimeout(()=>set(s),t));t+=d})}
+document.getElementById('p1').onclick=()=>play([['idle',1800],['thinking',2200],['happy',2200],['celebrating',2800],['idle',0]]);
+document.getElementById('p2').onclick=()=>play([['idle',1500],['thinking',2200],['error',3200],['idle',0]]);
+addEventListener('keydown',e=>{const k=Object.keys(S)[+e.key-1];if(k){stop();set(k)}});
+window.nova={setState:k=>{stop();set(k)},states:Object.keys(S)};
+const cf=document.getElementById('confetti'),cols=['#FFC93C','#FF9F2E','#5E8F57','#F6E7C1','#4A2C1A'];
+for(let i=0;i<18;i++){
+  const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  r.setAttribute('width',6+Math.random()*3);r.setAttribute('height',10+Math.random()*4);r.setAttribute('rx',1.5);
+  r.setAttribute('fill',cols[i%cols.length]);r.setAttribute('class','cf');
+  r.style.setProperty('--x',(8+i*16)+'px');
+  r.style.setProperty('--dx',(Math.random()*40-20)+'px');
+  r.style.setProperty('--r',(Math.random()*720-360)+'deg');
+  r.style.setProperty('--t',(1.6+Math.random()*1.2)+'s');
+  r.style.setProperty('--d','-'+(Math.random()*2.5)+'s');
+  cf.appendChild(r);
+}
+set('idle');
+</script>
+</body>
+</html>
