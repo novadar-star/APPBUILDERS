@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/app/theme.dart';
 import 'package:snapfood/data/asset_loader.dart';
 import 'package:snapfood/domain/models.dart';
 import 'package:snapfood/shared/on_device_badge.dart';
@@ -723,12 +724,13 @@ class _IngredientRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = theme.extension<SnapFoodShapes>();
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(shapes?.chip ?? 8.0),
       ),
       child: Row(
         children: [

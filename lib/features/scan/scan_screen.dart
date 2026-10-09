@@ -296,10 +296,11 @@ class _MockCameraBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       height: 280,
       decoration: BoxDecoration(
-        color: const Color(0xFF1B2E22),
+        color: colorScheme.inverseSurface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Stack(
@@ -338,7 +339,7 @@ class _MockCameraBox extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -346,9 +347,7 @@ class _MockCameraBox extends StatelessWidget {
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onPrimaryContainer,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -359,7 +358,7 @@ class _MockCameraBox extends StatelessWidget {
             child: Text(
               'Point at your ingredients',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white54,
+                color: colorScheme.onInverseSurface.withValues(alpha: 0.7),
               ),
             ),
           ),

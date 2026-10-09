@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/app/theme.dart';
 import 'package:snapfood/data/asset_loader.dart';
 import 'package:snapfood/data/preferences_store.dart';
 import 'package:snapfood/domain/models.dart';
@@ -118,6 +119,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     Set<String> ownedIds,
   ) {
     final colorScheme = theme.colorScheme;
+    final shapes = theme.extension<SnapFoodShapes>();
 
     final matchResults = _query.isEmpty
         ? <Ingredient>[]
@@ -197,12 +199,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 filled: true,
                 fillColor: colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(shapes?.input ?? 12.0),
                   borderSide:
                       BorderSide(color: colorScheme.outlineVariant),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(shapes?.input ?? 12.0),
                   borderSide:
                       BorderSide(color: colorScheme.outlineVariant),
                 ),
@@ -218,7 +220,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(shapes?.input ?? 12.0),
                   border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: ListView.builder(
