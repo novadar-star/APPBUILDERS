@@ -27,14 +27,14 @@ class HomeScreen extends ConsumerWidget {
               Container(
                 height: 220,
                 decoration: BoxDecoration(
-                  color: colorScheme.primary,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Icon(
                     Icons.restaurant_menu,
                     size: 80,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -150,7 +150,7 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 'No internet needed. No data shared. Just good food.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.primary,
+                  color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                   height: 1.5,
                 ),

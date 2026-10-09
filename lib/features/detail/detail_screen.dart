@@ -515,7 +515,7 @@ class _AdaptedRecipeView extends StatelessWidget {
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
             label: 'you\'ll need to grab',
-            color: colorScheme.primary,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 6),
           ...toBuy.map((ai) {
@@ -642,7 +642,7 @@ class _BaseRecipeView extends StatelessWidget {
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
             label: 'you\'ll need to grab',
-            color: colorScheme.primary,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
           ...missing.map((ri) => _IngredientRow(
@@ -780,7 +780,7 @@ class _StepRow extends StatelessWidget {
               child: Text(
                 '$number',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.primary,
+                  color: colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.w800,
                 ),
               ),
