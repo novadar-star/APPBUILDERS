@@ -107,7 +107,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             'Camera permission denied. Please allow camera access in Settings.');
       } else {
         setState(() => _cameraError =
-            'Oops. I couldn\'t tell what that is. Try another angle?');
+            e.description ?? 'Camera unavailable. Please restart the app.');
       }
     }
   }
@@ -478,6 +478,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   child: NovaWidget(
                     state: _novaViewfinderState,
                     size: 80,
+                    caption: _novaViewfinderState == NovaState.happy
+                        ? null
+                        : 'Point me at your plate.',
                   ),
                 ),
               ),

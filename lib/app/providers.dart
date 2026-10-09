@@ -1,7 +1,10 @@
+
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:snapfood/core/config_loader.dart';
 import 'package:snapfood/data/asset_loader.dart';
+import 'package:snapfood/data/onboarding_store.dart';
 import 'package:snapfood/data/preferences_store.dart';
 import 'package:snapfood/domain/adaptation_service.dart';
 import 'package:snapfood/domain/models.dart';
@@ -21,6 +24,16 @@ import 'package:snapfood/shared/on_device_badge.dart';
 
 /// Loads AppConfig once from assets/config/app_config.json.
 final appConfigProvider = FutureProvider<AppConfig>((ref) => AppConfig.load());
+
+/// Whether the user has completed onboarding.
+final onboardingDoneProvider = FutureProvider<bool>(
+  (ref) => OnboardingStore().isDone(),
+);
+
+/// Notifier so any screen can mark onboarding complete and invalidate the
+/// provider so the router re-evaluates the initial route.
+final onboardingDoneNotifierProvider =
+    StateProvider<bool>((ref) => false);
 
 /// ModelStore singleton.
 final modelStoreProvider = Provider<ModelStore>((ref) => ModelStore());
