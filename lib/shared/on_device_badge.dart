@@ -1,12 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/ml/model_store.dart';
 
-/// Full card version of the on-device model status badge.
-/// Mirrors [_ModelStatus] from the original single-file scaffold.
+// ---------------------------------------------------------------------------
+// BadgeModelStatus
+// ---------------------------------------------------------------------------
+enum BadgeModelStatus { setupRequired, loading, ready, mock }
+
+// ---------------------------------------------------------------------------
+// OnDeviceBadge — full card version
+// ---------------------------------------------------------------------------
 class OnDeviceBadge extends StatelessWidget {
-  const OnDeviceBadge({super.key});
+  final BadgeModelStatus visionStatus;
+  final BadgeModelStatus llmStatus;
+
+  const OnDeviceBadge({
+    super.key,
+    this.visionStatus = BadgeModelStatus.setupRequired,
+    this.llmStatus = BadgeModelStatus.setupRequired,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasMock =
+        visionStatus == BadgeModelStatus.mock || llmStatus == BadgeModelStatus.mock;
+    final hasSetupRequired = visionStatus == BadgeModelStatus.setupRequired ||
+        llmStatus == BadgeModelStatus.setupRequired;
+    final isLoading = visionStatus == BadgeModelStatus.loading ||
+        llmStatus == BadgeModelStatus.loading;
+    final bothReady =
+        visionStatus == BadgeModelStatus.ready && llmStatus == BadgeModelStatus.ready;
+
+    final String label;
+    final Color iconColor;
+
+    if (hasMock) {
+      label = 'On-device models · MOCK';
+      iconColor = const Color(0xFFB07B3A);
+    } else if (hasSetupRequired) {
+      label = 'On-device models · Setup required';
+      iconColor = const Color(0xFF596357);
+    } else if (isLoading) {
+      label = 'On-device models · Loading...';
+      iconColor = const Color(0xFF596357);
+    } else if (bothReady) {
+      label = 'On-device models · Ready';
+      iconColor = const Color(0xFF267450);
+    } else {
+      label = 'On-device models · Setup required';
+      iconColor = const Color(0xFF596357);
+    }
+
+    final String subtitle;
+    if (bothReady) {
+      subtitle = 'Vision and recipe adaptation models are ready.';
+    } else if (isLoading) {
+      subtitle = 'Loading models, please wait.';
+    } else {
+      subtitle = 'Vision and recipe adaptation models are not installed.';
+    }
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -15,48 +69,73 @@ class OnDeviceBadge extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.phonelink_setup, color: Color(0xFF596357)),
+          Icon(Icons.phonelink_setup, color: iconColor),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'On-device models · Setup required',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  'Vision and recipe adaptation models are not installed.',
-                  style: TextStyle(fontSize: 12),
-                ),
+                Text(subtitle, style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
-          _MockTag(),
+          if (hasMock) const _MockTag(),
         ],
       ),
     );
   }
 }
 
-/// Compact AppBar version of the on-device model status badge.
-/// Mirrors [_MiniStatus] from the original single-file scaffold.
+// ---------------------------------------------------------------------------
+// OnDeviceMini — compact AppBar version
+// ---------------------------------------------------------------------------
 class OnDeviceMini extends StatelessWidget {
-  const OnDeviceMini({super.key});
+  final BadgeModelStatus visionStatus;
+  final BadgeModelStatus llmStatus;
+
+  const OnDeviceMini({
+    super.key,
+    this.visionStatus = BadgeModelStatus.setupRequired,
+    this.llmStatus = BadgeModelStatus.setupRequired,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final hasMock =
+        visionStatus == BadgeModelStatus.mock || llmStatus == BadgeModelStatus.mock;
+    final bothReady =
+        visionStatus == BadgeModelStatus.ready && llmStatus == BadgeModelStatus.ready;
+
+    final String tag;
+    final Color color;
+
+    if (hasMock) {
+      tag = 'ON DEVICE · MOCK';
+      color = const Color(0xFFB07B3A);
+    } else if (bothReady) {
+      tag = 'ON DEVICE · READY';
+      color = const Color(0xFF267450);
+    } else {
+      tag = 'ON DEVICE · SETUP REQD';
+      color = const Color(0xFF596357);
+    }
+
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.phone_android, size: 16, color: Color(0xFF267450)),
-        SizedBox(width: 4),
+        Icon(Icons.phone_android, size: 16, color: color),
+        const SizedBox(width: 4),
         Text(
-          'ON DEVICE · MOCK',
+          tag,
           style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
+            color: color,
           ),
         ),
       ],
@@ -64,8 +143,79 @@ class OnDeviceMini extends StatelessWidget {
   }
 }
 
-/// Internal amber/orange MOCK tag used by [OnDeviceBadge].
+// ---------------------------------------------------------------------------
+// Consumer variants — read live providers
+// ---------------------------------------------------------------------------
+
+BadgeModelStatus _mapModelStatus(ModelStatus status) {
+  switch (status) {
+    case ModelStatus.ready:
+      return BadgeModelStatus.ready;
+    case ModelStatus.loading:
+      return BadgeModelStatus.loading;
+    case ModelStatus.present:
+      return BadgeModelStatus.ready;
+    case ModelStatus.missing:
+    case ModelStatus.failed:
+      return BadgeModelStatus.setupRequired;
+  }
+}
+
+class OnDeviceBadgeConsumer extends ConsumerWidget {
+  const OnDeviceBadgeConsumer({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visionAsync = ref.watch(visionModelStatusProvider);
+    final llmAsync = ref.watch(llmModelStatusProvider);
+
+    final visionBadge = visionAsync.when(
+      data: (s) => _mapModelStatus(s.status),
+      loading: () => BadgeModelStatus.loading,
+      error: (_, __) => BadgeModelStatus.setupRequired,
+    );
+
+    final llmBadge = llmAsync.when(
+      data: (s) => _mapModelStatus(s.status),
+      loading: () => BadgeModelStatus.loading,
+      error: (_, __) => BadgeModelStatus.setupRequired,
+    );
+
+    return OnDeviceBadge(visionStatus: visionBadge, llmStatus: llmBadge);
+  }
+}
+
+class OnDeviceMiniConsumer extends ConsumerWidget {
+  const OnDeviceMiniConsumer({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visionAsync = ref.watch(visionModelStatusProvider);
+    final llmAsync = ref.watch(llmModelStatusProvider);
+
+    final visionBadge = visionAsync.when(
+      data: (s) => _mapModelStatus(s.status),
+      loading: () => BadgeModelStatus.loading,
+      error: (_, __) => BadgeModelStatus.setupRequired,
+    );
+
+    final llmBadge = llmAsync.when(
+      data: (s) => _mapModelStatus(s.status),
+      loading: () => BadgeModelStatus.loading,
+      error: (_, __) => BadgeModelStatus.setupRequired,
+    );
+
+    return OnDeviceMini(visionStatus: visionBadge, llmStatus: llmBadge);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Internal widgets
+// ---------------------------------------------------------------------------
+
 class _MockTag extends StatelessWidget {
+  const _MockTag();
+
   @override
   Widget build(BuildContext context) {
     return Container(
