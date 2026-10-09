@@ -1,35 +1,35 @@
-# SnapFood Flutter UI — Semantic Code Review
+# SnapFood Flutter UI — Semantic Code Review (Post-Iteration-2)
 
-This pass reviews the UI overhaul of the SnapFood app: a new Material 3 token-driven theme, redesigned screens for Home, Scan, Review, Results, and Detail, plus shared widgets TagChip and EmptyState. A prior fix pass addressed three blocking findings (hardcoded font sizes in `results_screen.dart`, `detail_screen.dart`, and `tag_chip.dart`). The verification note confirms `flutter analyze` exits clean.
+The UI overhaul replaced hardcoded colors and font sizes with Material 3 ColorScheme and TextTheme roles, introduced `SnapFoodShapes` as a `ThemeExtension` to unify border radii, added a dark theme via `buildDarkTheme()`, and replaced the plain loading indicator on `results_screen.dart` with a skeleton card pattern. Two prior blocking findings (hardcoded viewfinder color and `Colors.white54` label) were resolved in iteration 2. Both non-blocking shape-hardcode issues in `detail_screen.dart` and `review_screen.dart` were also cleaned up.
 
-**Watch for:** One confirmed blocking issue remains — `_MockCameraBox` in `scan_screen.dart` uses `const Color(0xFF1B2E22)` as the camera viewfinder background and `Colors.white54` as its center label color. Both are hardcoded values outside the ColorScheme. One confirmed blocking issue on shape radius: `_IngredientRow` in `detail_screen.dart` uses `BorderRadius.circular(8)` inline (matching chip radius, not card radius), and while this value happens to match the chip spec, it is not sourced from `SnapFoodShapes`, making it inconsistent with the theming contract.
+Watch for: (1) `CircularProgressIndicator` still present in `detail_screen.dart` and `review_screen.dart` loading states — the criterion requires it on `results_screen.dart` specifically, but its presence elsewhere should be noted. (2) `TagChip` hardcodes `BorderRadius.circular(8)` for its chip shape rather than reading `SnapFoodShapes.chip` from the theme — confirmed inconsistency with the shape system. (3) `_StepRow`'s step-number badge uses `BorderRadius.circular(8)` hardcoded rather than `SnapFoodShapes.chip`. (4) `empty_state.dart` illustration container uses `BorderRadius.circular(24)` with no token backing it.
 
-**Verdict**: CHANGES_REQUESTED
+**Verdict**: APPROVED
 
 ---
 
 ## High-level view
 
-The theme architecture is solid. `buildAppTheme()` and `buildDarkTheme()` both derive their `ColorScheme` from `ColorScheme.fromSeed` with brightness variants, and the `SnapFoodShapes` extension centralises all four radii (card 16, input 12, chip 8, button 28). All `ThemeData` widget themes source from this extension. The light/dark requirement is met.
+The `SnapFoodShapes` theme extension cleanly centralizes the four radius tokens (card 16, input 12, chip 8, button 28) and all component themes in `_buildFromColorScheme` consume them. Both `buildAppTheme()` and `buildDarkTheme()` delegate to the shared builder, so dark mode is fully wired at the theme level. The widget files pick up all colors from `ColorScheme` roles with no raw `Color(0xFF...)` or named `Colors.*` values in chrome — the only color literals in the diff are seed values in `theme.dart` itself, which is correct.
 
-The screen-level color discipline is nearly complete, but `_MockCameraBox` breaks it. The viewfinder container is hardcoded to `Color(0xFF1B2E22)` (a dark green) and the center label to `Colors.white54` — neither adapts to the active `ColorScheme`. In dark mode the viewfinder may be indistinguishable from the scaffold background, and `Colors.white54` will produce low contrast against surfaces that aren't dark.
+The `results_screen.dart` loading path uses `_SkeletonColumn`/`_SkeletonCard` (animated opacity pulse with `LinearProgressIndicator`-style shimmer blocks) rather than a spinner, satisfying the criterion. `CircularProgressIndicator` does appear in `detail_screen.dart` and `review_screen.dart` for their bundle-loading states, which is a separate question from the criterion as written.
 
-Shape usage is consistent across card-level containers (16dp), input fields (12dp in both theme and `review_screen.dart`'s inline `TextField`), and chip widgets. The `_IngredientRow` in `detail_screen.dart` hardcodes `BorderRadius.circular(8)` rather than reading from `SnapFoodShapes`, which means a future shape change will silently miss these rows.
+`TagChip` locks its border radius to `BorderRadius.circular(8)` rather than reading `SnapFoodShapes.chip`. Since `TagChip` is used widely (results cards, detail screen, adaptation banner), this makes the chip radius effectively independent of the theme token — if the design ever changes `chip` to 6 or 12, `TagChip` won't follow. The `_StepRow` step-number badge (detail screen) has the same hardcode. These are not shape-*inconsistency* issues (8dp matches the token value today) but they are shape-system contract gaps.
 
-The `SafeArea` story is clean. Every screen with a bottom CTA wraps it in `SafeArea`, and `_SkeletonColumn` / `_ResultsList` / `_DetailBody` all use `SafeArea` at scroll content level. No hardcoded status bar heights are present.
+`SafeArea` coverage is complete on all bottom CTAs: `scan_screen.dart` wraps its pinned `FilledButton` in `SafeArea`, and `review_screen.dart`/`home_screen.dart` use `SafeArea` wrapping the entire scroll body. No `MediaQuery.of(context).padding.top` fixed offsets were observed.
 
-`results_screen.dart` correctly uses `LinearProgressIndicator` for the loading state. The skeleton cards now include two chip-shaped placeholder containers, matching the real card's chip row geometry.
+The `empty_state.dart` illustration container uses `BorderRadius.circular(24)`, which has no corresponding token in `SnapFoodShapes`. This is minor — the container is illustrative chrome, not a standard chip/card/input — but it's worth noting as an untokenized radius.
 
 ---
 
 <details>
-<summary>Issues (2)</summary>
+<summary>Issues (3)</summary>
 
-1. **Hardcoded viewfinder color** — `_MockCameraBox` in `scan_screen.dart` uses `Color(0xFF1B2E22)` for the camera box background. Replace with a ColorScheme token (e.g. `colorScheme.surfaceContainerLow` or `colorScheme.inverseSurface`) so it adapts in dark mode. **Blocking.**
+1. **TagChip chip radius not tokenized** — `tag_chip.dart` hardcodes `BorderRadius.circular(8)` instead of reading `theme.extension<SnapFoodShapes>()?.chip`. If the chip token changes, `TagChip` (used on every results card, detail banner, and scan chips) won't follow. Fix: inject `SnapFoodShapes` in `TagChip.build` and fall back to `8.0`.
 
-2. **Hardcoded text color in viewfinder** — `Colors.white54` is used for the "Point at your ingredients" label inside `_MockCameraBox`. Replace with a ColorScheme-derived color (e.g. `colorScheme.onSurface.withValues(alpha: 0.54)` against the chosen background token). **Blocking.**
+2. **_StepRow badge radius not tokenized** — `detail_screen.dart` `_StepRow` uses `BorderRadius.circular(8)` for the step-number container. Same contract gap as TagChip. Fix: read `theme.extension<SnapFoodShapes>()?.chip ?? 8.0`.
 
-3. **Unthemed shape in `_IngredientRow`** — `detail_screen.dart` hardcodes `BorderRadius.circular(8)` in `_IngredientRow`'s container decoration. Read from `Theme.of(context).extension<SnapFoodShapes>()?.chip ?? 8.0` to stay in sync with the shape system. **Non-blocking** (value currently matches chip spec, but breaks the contract).
+3. **EmptyState illustration radius untokenized** — `empty_state.dart` uses `BorderRadius.circular(24)` for the icon container with no backing token. Not a functional issue, but it's the only radius in the codebase without a token. Consider adding a `badge` or `illustration` radius to `SnapFoodShapes`, or accepting 24dp as a one-off constant with a comment.
 
 </details>
 
@@ -38,40 +38,33 @@ The `SafeArea` story is clean. Every screen with a bottom CTA wraps it in `SafeA
 <details>
 <summary>Details</summary>
 
-### Hardcoded colors in the camera viewfinder
+### Theme system: light and dark coverage
 
-`_MockCameraBox` (`scan_screen.dart`, the `Container` at the top of its `build` method) sets its background to `const Color(0xFF1B2E22)` — a fixed dark green. The center `Text` uses `Colors.white54`. Neither value participates in the `ColorScheme`.
+`theme.dart` defines both `buildAppTheme()` and `buildDarkTheme()`, both seeding from `Color(0xFFE07A2F)` with `ColorScheme.fromSeed`. The dark variant passes `brightness: Brightness.dark` to `fromSeed`, so Material 3 tonal palette generation handles the full color surface hierarchy automatically. `SnapFoodShapes` is injected via `extensions: const [shapes]` in both paths through the shared `_buildFromColorScheme` builder. Dark mode criterion: **confirmed met**.
 
-In light mode this produces a dark viewfinder that contrasts correctly against the scaffold, but the contrast is accidental. In dark mode, depending on the seed color's surface tone, `Color(0xFF1B2E22)` may sit close to `colorScheme.surface`, making the viewfinder boundary invisible. `Colors.white54` is explicitly non-adaptive; against a light surface it would render nearly invisible.
+### Shape system coverage and gaps
 
-The corner bracket `_CornerPainter` and the accent-fill overlay both correctly receive `accentColor` from `colorScheme.primary`, so the fix is isolated to the container background and the center label.
+All four `SnapFoodShapes` tokens (card 16, input 12, chip 8, button 28) are consumed in `theme.dart`'s component themes (CardTheme, InputDecorationTheme, ChipTheme, FilledButtonTheme, OutlinedButtonTheme). Widget files that needed local radius now read `theme.extension<SnapFoodShapes>()` — `detail_screen.dart`'s `_IngredientRow` uses `shapes?.chip ?? 8.0` and `review_screen.dart`'s `TextField` and search results container use `shapes?.input ?? 12.0`. These were the iteration-2 fixes.
 
-### Shape contract gap in `_IngredientRow`
+Two callsites remain outside the token system. `TagChip` (`shared/tag_chip.dart` line with `BorderRadius.circular(8)`) is a `StatelessWidget` that could trivially call `theme.extension<SnapFoodShapes>()` in its `build` method. The `_StepRow` step-number badge in `detail_screen.dart` (the `Container` with `borderRadius: BorderRadius.circular(8)`) has the same gap. Today both happen to match the `chip` token value, so there is no visual inconsistency — but the contract is broken.
 
-`detail_screen.dart`'s `_IngredientRow` decorates each ingredient row container with `BorderRadius.circular(8)` (confirmed at line ~490 in the file). This matches the chip radius in `SnapFoodShapes.chip`, but the value is a magic number rather than a lookup from the extension. If the designer changes the chip token, ingredient rows won't follow.
+### CircularProgressIndicator on results_screen.dart
 
-The correct read is:
+`results_screen.dart` has no `CircularProgressIndicator`. The loading path renders `_SkeletonColumn`, which stacks three `_SkeletonCard` widgets. Each card pulses via `AnimationController` + `Tween<double>(begin: 0.4, end: 1.0)` (opacity shimmer). The skeleton card structure (title bar placeholder, three text line placeholders at 80/95/70% width, two chip-shape placeholders) is a reasonable match to the loaded `_RecipeCard` shape (title, body text, chip row). Criterion: **confirmed met**.
 
-```dart
-final shapes = Theme.of(context).extension<SnapFoodShapes>();
-BorderRadius.circular(shapes?.chip ?? 8.0)
-```
+`CircularProgressIndicator` does appear in `detail_screen.dart` (bundle loading path, line inside `body: bundleAsync.when(loading: ...)`) and in `review_screen.dart` (same pattern). The criterion only names `results_screen.dart`, so these are out of scope for blocking, but they represent an inconsistency — results gets a skeleton while detail and review get spinners for the same async bundle.
 
-### `review_screen.dart` inline `TextField` borders
+### Color and font hygiene
 
-The `TextField` in `_buildBody` specifies its own `border` and `enabledBorder` with `BorderRadius.circular(12)` rather than inheriting from `InputDecorationTheme`. This duplicates the input radius but keeps it in sync only by coincidence. A change to `SnapFoodShapes.input` won't propagate here. Worth noting, though it is non-blocking as long as the theme and inline value stay at 12.
+No `Color(0xFF...)` literals appear in widget files. The one `Colors.black` reference in `scan_screen.dart` is a drop-shadow overlay (`withValues(alpha: 0.12)`) — acceptable. No `fontSize:` overrides appear anywhere; all `.copyWith()` calls touch only `fontWeight`, `color`, `letterSpacing`, and `height`.
 
-### Dark mode coverage
+### SafeArea, layout bounds
 
-Both `buildAppTheme()` and `buildDarkTheme()` are defined in `theme.dart` and both delegate to `_buildFromColorScheme`. The shared builder derives every color from the passed `ColorScheme`, so all tokens adapt correctly. Dark mode is fully supported at the theme layer; the viewfinder issue above is the only surface-level escape hatch.
+`scan_screen.dart`'s pinned "Done" button is wrapped in `SafeArea` before its padding. All other screens wrap their scroll body in `SafeArea`. No `MediaQuery.of(context).padding.top` offsets found. The `ListView.builder` in `_ResultsList` uses `shrinkWrap: true` + `NeverScrollableScrollPhysics()` (max 3 items), and the search dropdown in `review_screen.dart` is bounded by `BoxConstraints(maxHeight: 160)` — no unbounded Column children.
 
-### `CircularProgressIndicator` audit
+### Haptic feedback gaps
 
-`results_screen.dart` uses `LinearProgressIndicator` for the loading overlay in `_ResultsList`. Two `CircularProgressIndicator` instances remain: one in `detail_screen.dart`'s `bundleAsync.when(loading:)` branch and one in `review_screen.dart`'s `bundleAsync.when(loading:)` branch. The review criteria specified replacement only on `results_screen.dart`, which is done. The remaining spinners are on full-screen data-load states where circular is contextually appropriate.
-
-### Skeleton fidelity
-
-`_SkeletonCard` now includes a chip row (two containers, 60×24 and 80×24, `BorderRadius.circular(8)`). The real `_RecipeCard` shows a `Wrap` of `TagChip` widgets in approximately the same row position. The geometry is a close enough match for a skeleton — the chip heights and radii align with actual `TagChip` sizing.
+Primary CTAs on `home_screen.dart`, `review_screen.dart`, and `results_screen.dart` card taps all have haptic. Missing: secondary CTA ("Add ingredients manually") on home, budget `ChoiceChip` and ingredient removal chips on review, ingredient chip taps on detail. All non-blocking.
 
 </details>
 
@@ -82,12 +75,15 @@ Both `buildAppTheme()` and `buildDarkTheme()` are defined in `theme.dart` and bo
 
 | File | What changed |
 |---|---|
-| `lib/app/theme.dart` | New file: `SnapFoodShapes` extension + `buildAppTheme()` + `buildDarkTheme()` with shared `_buildFromColorScheme` builder |
-| `lib/features/home/home_screen.dart` | Full rewrite to Material 3 tokens; SafeArea on body; haptic on primary CTA; no hardcoded colors |
-| `lib/features/scan/scan_screen.dart` | Draggable sheet for detected ingredients; pinned SafeArea CTA; `_MockCameraBox` with hardcoded viewfinder color (blocking) |
-| `lib/features/review/review_screen.dart` | Equipment + budget preference UI; SafeArea body; inline TextField border (non-blocking divergence) |
-| `lib/features/results/results_screen.dart` | Skeleton loader with chip row; LinearProgressIndicator loading overlay; ListView.builder for results list |
-| `lib/features/detail/detail_screen.dart` | `_StepRow` badge uses `titleMedium` (prior fix); `_IngredientRow` hardcodes 8dp radius (non-blocking); SafeArea on scroll body |
-| `lib/shared/tag_chip.dart` | Replaced hardcoded `TextStyle(fontSize: 10)` with `textTheme.labelSmall` (prior fix) |
-| `lib/shared/empty_state.dart` | New shared widget; all colors from ColorScheme; no blocking issues |
+| `lib/app/theme.dart` | Added `buildDarkTheme()`, extracted shared `_buildFromColorScheme()`, added `SnapFoodShapes` ThemeExtension with card/input/chip/actionButton tokens |
+| `lib/features/home/home_screen.dart` | All colors from ColorScheme, TextTheme roles for all text, haptic on primary CTA, SafeArea wrapping |
+| `lib/features/scan/scan_screen.dart` | Viewfinder background → `colorScheme.inverseSurface`, label color → `colorScheme.onInverseSurface.withValues(alpha: 0.7)`, SafeArea on pinned button |
+| `lib/features/review/review_screen.dart` | TextField and search container border radii → `shapes?.input ?? 12.0`, all colors from ColorScheme |
+| `lib/features/results/results_screen.dart` | CircularProgressIndicator replaced with `_SkeletonColumn`/`_SkeletonCard` skeleton loader, LinearProgressIndicator for adaptation state |
+| `lib/features/detail/detail_screen.dart` | `_IngredientRow` border radius → `shapes?.chip ?? 8.0`, all colors from ColorScheme, TextTheme roles |
+| `lib/shared/tag_chip.dart` | Removed hardcoded `fontSize`, now derives from `theme.textTheme.labelSmall`; chip shape still hardcoded to 8dp |
+| `lib/shared/empty_state.dart` | Colors from ColorScheme, TextTheme roles; illustration container radius (24dp) untokenized |
 
+Full diff: `git diff main -- lib/`
+
+</details>
