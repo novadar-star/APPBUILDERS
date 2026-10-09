@@ -9,6 +9,8 @@ import 'package:snapfood/app/providers.dart';
 import 'package:snapfood/app/theme.dart';
 import 'package:snapfood/data/asset_loader.dart';
 import 'package:snapfood/domain/models.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/on_device_badge.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 import 'package:snapfood/shared/tag_chip.dart';
@@ -306,7 +308,6 @@ class _AdaptationBanner extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     if (adaptState.isRunning) {
-      // Live token streaming preview — last ~200 chars of raw output.
       final rawPreview = adaptState.tokens.join();
       final preview = rawPreview.length > 200
           ? rawPreview.substring(rawPreview.length - 200)
@@ -321,16 +322,30 @@ class _AdaptationBanner extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'tweaking the recipe for you\u2026',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            Text(
-              '${adaptState.tokens.length} tokens'
-              '${adaptState.elapsedMs > 0 ? ' \u00b7 ${_formatElapsed(adaptState.elapsedMs)}' : ''}',
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            Row(
+              children: [
+                // Nova thinking — inline 32dp
+                const NovaWidget(state: NovaState.thinking, size: 32),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Adapting this for you\u2026',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '${adaptState.tokens.length} tokens'
+                        '${adaptState.elapsedMs > 0 ? ' \u00b7 ${_formatElapsed(adaptState.elapsedMs)}' : ''}',
+                        style: theme.textTheme.labelSmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
@@ -359,19 +374,19 @@ class _AdaptationBanner extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: colorScheme.errorContainer,
+          color: colorScheme.tertiaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(Icons.info_outline,
-                color: colorScheme.onErrorContainer, size: 18),
+            // Nova error — inline 32dp
+            const NovaWidget(state: NovaState.error, size: 32),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'the model had trouble adapting this, so here\u2019s the original recipe',
+                "Couldn't adapt this one. Showing the original.",
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onErrorContainer,
+                  color: colorScheme.onTertiaryContainer,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -397,21 +412,16 @@ class _AdaptationBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.check_circle, color: colorScheme.primary, size: 18),
+            // Nova happy — inline 32dp
+            const NovaWidget(state: NovaState.happy, size: 32),
             const SizedBox(width: 10),
             Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'adapted just for you$tokenLabel$elapsedLabel',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Got it. Here\u2019s your recipe$tokenLabel$elapsedLabel',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -428,12 +438,11 @@ class _AdaptationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline,
-              color: colorScheme.onSurfaceVariant, size: 18),
+          const NovaWidget(state: NovaState.idle, size: 32),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Tap a recipe to see your personalized adaptation.',
+              'showing original recipe \u2014 AI adaptation not set up yet',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,

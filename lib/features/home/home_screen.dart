@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -44,22 +46,15 @@ class HomeScreen extends ConsumerWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Illustration upper right
+                    // Nova hero — idle until ingredients scanned, then happy
                     Positioned(
                       top: 0,
                       right: 0,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 48,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
+                      child: NovaWidget(
+                        state: ownedIngredients.isEmpty
+                            ? NovaState.idle
+                            : NovaState.happy,
+                        size: 160,
                       ),
                     ),
 
