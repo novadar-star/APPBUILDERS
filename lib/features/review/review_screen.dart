@@ -142,21 +142,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             const SizedBox(height: 16),
 
             // ── INGREDIENTS section header ────────────────────────────────
-            Text(
-              'your ingredients',
-              style: theme.textTheme.titleSmall?.copyWith(
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w800,
+            Padding(
+              padding: const EdgeInsets.only(top: 28, bottom: 8),
+              child: Text(
+                'your ingredients',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Tap × to remove any, or search to add more.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 14),
 
             // ── Confirmed chips ──────────────────────────────────────────
             if (ownedIds.isNotEmpty)
@@ -263,24 +259,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
               ),
 
-            const SizedBox(height: 32),
-
             // ── Equipment section ────────────────────────────────────────
-            Text(
-              'cooking with',
-              style: theme.textTheme.titleSmall?.copyWith(
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w800,
+            Padding(
+              padding: const EdgeInsets.only(top: 28, bottom: 8),
+              child: Text(
+                'cooking with',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'What are you cooking with today?',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 10),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Wrap(
@@ -313,23 +303,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
-
             // ── Budget section ───────────────────────────────────────────
-            Text(
-              'extra budget',
-              style: theme.textTheme.titleSmall?.copyWith(
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w800,
+            Padding(
+              padding: const EdgeInsets.only(top: 28, bottom: 8),
+              child: Text(
+                'extra budget',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'How much can you spend on missing ingredients?',
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
