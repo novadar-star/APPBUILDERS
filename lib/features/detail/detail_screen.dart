@@ -777,8 +777,7 @@ class _StepRow extends StatelessWidget {
             child: Center(
               child: Text(
                 '$number',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontSize: 20,
+                style: theme.textTheme.titleMedium?.copyWith(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.w800,
                 ),

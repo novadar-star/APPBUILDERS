@@ -23,8 +23,7 @@ class TagChip extends StatelessWidget {
       onPressed: null,
       label: Text(
         text,
-        style: TextStyle(
-          fontSize: 10,
+        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: 0.4,
           color: fallbackTextColor,

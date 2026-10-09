@@ -159,6 +159,29 @@ class _SkeletonCardState extends State<_SkeletonCard>
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // Chip row — two short skeleton chips
+                  Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 80,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -346,7 +369,6 @@ class _RecipeCard extends StatelessWidget {
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: colorScheme.onSurface,
-                    fontSize: 22,
                   ),
                 ),
 
