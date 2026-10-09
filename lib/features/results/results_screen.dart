@@ -31,7 +31,7 @@ class ResultsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipes for you'),
+        title: const Text('here\'s what you can make'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -245,11 +245,12 @@ class _ResultsList extends StatelessWidget {
             // ── Loading indicator ─────────────────────────────────────────
             if (isLoading) ...[
               Text(
-                'Adapting recipe…',
+                'cooking something up…',
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
               LinearProgressIndicator(
+                semanticsLabel: 'adapting recipe',
                 valueColor:
                     AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
@@ -258,7 +259,7 @@ class _ResultsList extends StatelessWidget {
 
             // ── Heading ──────────────────────────────────────────────────
             Text(
-              'A few good matches',
+              'a few good matches',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: colorScheme.onSurface,
@@ -277,9 +278,8 @@ class _ResultsList extends StatelessWidget {
             if (results.isEmpty)
               const EmptyState(
                 icon: Icons.no_food_outlined,
-                title: 'No recipes for that setup',
-                body:
-                    'Try adding another piece of equipment or ingredient.',
+                title: 'hmm, nothing matched.',
+                body: 'try adding more ingredients.',
               )
             else
               ListView.builder(

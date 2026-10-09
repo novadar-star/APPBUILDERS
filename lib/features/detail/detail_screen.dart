@@ -156,7 +156,7 @@ class _CostFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Estimated total: ₱$cost',
+                    'estimated extra spend: ₱$cost',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w700,
@@ -325,7 +325,7 @@ class _AdaptationBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Generating recipe adaptation…',
+                        'tweaking the recipe for you…',
                         style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600),
                       ),
@@ -363,7 +363,7 @@ class _AdaptationBanner extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Base recipe shown — model did not adapt it',
+                'the model had trouble adapting this, so here\'s the original recipe',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onErrorContainer,
                   fontWeight: FontWeight.w600,
@@ -391,7 +391,7 @@ class _AdaptationBanner extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Adapted by on-device model',
+                    'adapted just for you',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w600,
@@ -426,7 +426,7 @@ class _AdaptationBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Base recipe · language model not installed',
+              'showing base recipe · language model not installed',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w600,
@@ -480,7 +480,7 @@ class _AdaptedRecipeView extends StatelessWidget {
         if (owned.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.check_circle,
-            label: 'You already have',
+            label: 'you\'ve got these',
             color: colorScheme.tertiary,
           ),
           const SizedBox(height: 6),
@@ -496,7 +496,7 @@ class _AdaptedRecipeView extends StatelessWidget {
         if (substituted.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.swap_horiz,
-            label: 'Substitutions',
+            label: 'swapped these out',
             color: colorScheme.tertiary,
           ),
           const SizedBox(height: 6),
@@ -514,7 +514,7 @@ class _AdaptedRecipeView extends StatelessWidget {
         if (toBuy.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
-            label: 'Items to buy',
+            label: 'you\'ll need to grab',
             color: colorScheme.primary,
           ),
           const SizedBox(height: 6),
@@ -549,7 +549,7 @@ class _AdaptedRecipeView extends StatelessWidget {
 
         // Steps
         Text(
-          'Steps',
+          'how to make it',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,
@@ -615,7 +615,7 @@ class _BaseRecipeView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Ingredients',
+          'your ingredients',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,
@@ -626,7 +626,7 @@ class _BaseRecipeView extends StatelessWidget {
         if (owned.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.check_circle,
-            label: 'You have',
+            label: 'you\'ve got these',
             color: colorScheme.tertiary,
           ),
           const SizedBox(height: 4),
@@ -641,7 +641,7 @@ class _BaseRecipeView extends StatelessWidget {
         if (missing.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
-            label: "You'll need",
+            label: 'you\'ll need to grab',
             color: colorScheme.primary,
           ),
           const SizedBox(height: 4),
@@ -657,7 +657,7 @@ class _BaseRecipeView extends StatelessWidget {
         const SizedBox(height: 10),
 
         Text(
-          'Steps',
+          'how to make it',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,

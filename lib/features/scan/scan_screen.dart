@@ -113,7 +113,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan ingredients'),
+        title: const Text('scan ingredients'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -154,7 +154,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      'No ingredients detected yet. Pan around or add manually.',
+                      'nothing spotted yet',
                       style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant),
                       textAlign: TextAlign.center,
@@ -213,7 +213,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                       ),
                     ),
                     Text(
-                      'DETECTED INGREDIENTS',
+                      'spotted so far',
                       style: theme.textTheme.titleSmall?.copyWith(
                         letterSpacing: 1.2,
                         color: colorScheme.onSurfaceVariant,
@@ -267,7 +267,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 child: FilledButton(
                   onPressed: _onDone,
                   child: const Text(
-                    'Done — go to review',
+                    'looks good',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -356,7 +356,7 @@ class _MockCameraBox extends StatelessWidget {
           // Center label
           Center(
             child: Text(
-              'Point at your ingredients',
+              'point at your ingredients',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onInverseSurface.withValues(alpha: 0.7),
               ),

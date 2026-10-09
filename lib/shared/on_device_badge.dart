@@ -41,19 +41,19 @@ class OnDeviceBadge extends StatelessWidget {
     final Color iconColor;
 
     if (hasMock) {
-      label = 'On-device models · MOCK';
+      label = 'runs on your phone · MOCK';
       iconColor = colorScheme.primary;
     } else if (hasSetupRequired) {
-      label = 'On-device models · Setup required';
+      label = 'runs on your phone · setup required';
       iconColor = colorScheme.onSurfaceVariant;
     } else if (isLoading) {
-      label = 'On-device models · Loading...';
+      label = 'runs on your phone · loading…';
       iconColor = colorScheme.onSurfaceVariant;
     } else if (bothReady) {
-      label = 'On-device models · Ready';
+      label = 'runs on your phone · ready';
       iconColor = colorScheme.tertiary;
     } else {
-      label = 'On-device models · Setup required';
+      label = 'runs on your phone · setup required';
       iconColor = colorScheme.onSurfaceVariant;
     }
 
@@ -128,13 +128,13 @@ class OnDeviceMini extends StatelessWidget {
     final Color color;
 
     if (hasMock) {
-      tag = 'ON DEVICE · MOCK';
+      tag = 'on device · mock';
       color = colorScheme.primary;
     } else if (bothReady) {
-      tag = 'ON DEVICE · READY';
+      tag = 'on device · ready';
       color = colorScheme.tertiary;
     } else {
-      tag = 'ON DEVICE · SETUP REQD';
+      tag = 'on device · setup needed';
       color = colorScheme.onSurfaceVariant;
     }
 

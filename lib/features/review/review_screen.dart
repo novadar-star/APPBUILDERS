@@ -96,7 +96,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Review'),
+        title: const Text('what you\'ve got'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -143,7 +143,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
             // ── INGREDIENTS section header ────────────────────────────────
             Text(
-              'INGREDIENTS',
+              'your ingredients',
               style: theme.textTheme.titleSmall?.copyWith(
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w800,
@@ -151,7 +151,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Detected items are suggestions. Tap × to remove, or search to add.',
+              'Tap × to remove any, or search to add more.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -184,7 +184,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               ),
             if (ownedIds.isEmpty)
               Text(
-                'No ingredients confirmed yet. Use scan or search below.',
+                'nothing here yet — try scanning or add ingredients below',
                 style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant),
               ),
@@ -194,7 +194,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search ingredients (Filipino or English)…',
+                hintText: 'add something…',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: colorScheme.surface,
@@ -257,7 +257,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ref.read(ownedIngredientsProvider.notifier).state = {};
                   },
                   child: Text(
-                    'Clear all',
+                    'clear all',
                     style: TextStyle(color: colorScheme.error),
                   ),
                 ),
@@ -267,7 +267,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
             // ── Equipment section ────────────────────────────────────────
             Text(
-              'EQUIPMENT',
+              'cooking with',
               style: theme.textTheme.titleSmall?.copyWith(
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w800,
@@ -275,7 +275,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Cooking equipment',
+              'What are you cooking with today?',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -317,7 +317,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
             // ── Budget section ───────────────────────────────────────────
             Text(
-              'BUDGET',
+              'extra budget',
               style: theme.textTheme.titleSmall?.copyWith(
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w800,
@@ -365,7 +365,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ? null
                     : () => _saveAndNavigate(bundle),
                 child: const Text(
-                  'Find recipes',
+                  'find a recipe',
                   style:
                       TextStyle(fontWeight: FontWeight.w700),
                 ),

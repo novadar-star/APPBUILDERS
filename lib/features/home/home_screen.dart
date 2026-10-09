@@ -40,9 +40,9 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── App name ───────────────────────────────────────────────
+              // ── Hero heading ───────────────────────────────────────────
               Text(
-                'snapfood',
+                'What\'s in your\nkitchen?',
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -52,7 +52,7 @@ class HomeScreen extends ConsumerWidget {
 
               // ── Subtitle ───────────────────────────────────────────────
               Text(
-                'Find a Filipino favorite for your small kitchen and your budget.',
+                'Sweep your camera over your ingredients and we\'ll find something to cook.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.5,
@@ -105,7 +105,7 @@ class HomeScreen extends ConsumerWidget {
                     context.go('/scan');
                   },
                   child: const Text(
-                    'Start Scanning',
+                    'Start scanning',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
