@@ -1,0 +1,38 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": "blocking-1",
+      "severity": "BLOCKING",
+      "file": "lib/features/scan/scan_screen.dart",
+      "location": "_MockCameraBox — container background color",
+      "description": "Hardcoded Color(0xFF1B2E22) used as viewfinder background. Does not adapt in dark mode. Replace with a ColorScheme token such as colorScheme.surfaceContainerLow or colorScheme.inverseSurface.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "blocking-2",
+      "severity": "BLOCKING",
+      "file": "lib/features/scan/scan_screen.dart",
+      "location": "_MockCameraBox — center label text color",
+      "description": "Colors.white54 used for the 'Point at your ingredients' label. Not ColorScheme-derived; will be invisible on light surfaces. Replace with colorScheme.onSurface.withValues(alpha: 0.54) or equivalent.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "non-blocking-1",
+      "severity": "NON_BLOCKING",
+      "file": "lib/features/detail/detail_screen.dart",
+      "location": "_IngredientRow — container BorderRadius",
+      "description": "BorderRadius.circular(8) is hardcoded rather than read from SnapFoodShapes.chip. Currently matches the spec value but will silently diverge if the shape token changes. Use Theme.of(context).extension<SnapFoodShapes>()?.chip ?? 8.0.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "non-blocking-2",
+      "severity": "NON_BLOCKING",
+      "file": "lib/features/review/review_screen.dart",
+      "location": "_buildBody — TextField decoration borders",
+      "description": "Inline border and enabledBorder specify BorderRadius.circular(12) instead of inheriting from InputDecorationTheme. Stays in sync only by coincidence with SnapFoodShapes.input.",
+      "confidence": "confirmed"
+    }
+  ],
+  "reviewDoc": "c:\\Users\\jolyn\\APPBUILDERS\\.agents\\tasks\\ui-review.md"
+}
