@@ -113,7 +113,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('scan ingredients'),
+        title: const Text('Scan Ingredients'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -267,7 +267,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 child: FilledButton(
                   onPressed: _onDone,
                   child: const Text(
-                    'looks good',
+                    'Use This Photo',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),

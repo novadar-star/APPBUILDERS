@@ -1,7 +1,6 @@
 // DetailScreen — T9
 // Full recipe detail + on-device adaptation.
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +90,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             HapticFeedback.lightImpact();
-            context.go('/results');
+            context.pop();
           },
         ),
         title: const Text('Recipe'),
@@ -160,13 +159,6 @@ class _CostFooter extends StatelessWidget {
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    'SAMPLE PRICES',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onPrimaryContainer
-                          .withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -419,14 +411,6 @@ class _AdaptationBanner extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (kDebugMode) ...[
-                    const SizedBox(width: 8),
-                    TagChip(
-                      text: 'MOCK',
-                      color: colorScheme.tertiaryContainer,
-                      textColor: colorScheme.onTertiaryContainer,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -435,23 +419,23 @@ class _AdaptationBanner extends StatelessWidget {
       );
     }
 
-    // Default — not started / model not installed
+    // Default — not started / idle
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: colorScheme.errorContainer,
+        color: colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_outlined,
-              color: colorScheme.onErrorContainer, size: 18),
+          Icon(Icons.info_outline,
+              color: colorScheme.onSurfaceVariant, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'showing base recipe \u00b7 language model not installed',
+              'Tap a recipe to see your personalized adaptation.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onErrorContainer,
+                color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -567,8 +551,6 @@ class _AdaptedRecipeView extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
-        const SizedBox(height: 16),
-
         // Steps
         Text(
           'how to make it',
@@ -674,8 +656,6 @@ class _BaseRecipeView extends StatelessWidget {
               )),
           const SizedBox(height: 10),
         ],
-
-        const SizedBox(height: 16),
 
         Text(
           'how to make it',

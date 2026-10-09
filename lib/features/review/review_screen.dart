@@ -96,7 +96,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('what you\'ve got'),
+        title: const Text('What You\'ve Got'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),

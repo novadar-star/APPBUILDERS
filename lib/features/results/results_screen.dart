@@ -1,5 +1,6 @@
 // ResultsScreen — T9
 // Shows up to 3 recipes ranked by retrieval.
+// AppBar title: 'here\'s what you can make' → 'Here\'s What You Can Make'
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,12 +27,9 @@ class ResultsScreen extends ConsumerWidget {
     final ownedIds = ref.watch(ownedIngredientsProvider);
     final prefsAsync = ref.watch(preferencesProvider);
 
-    final isLoading =
-        bundleAsync.isLoading || prefsAsync.isLoading;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('here\'s what you can make'),
+        title: const Text('Here\'s What You Can Make'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 12),
@@ -58,7 +56,6 @@ class ResultsScreen extends ConsumerWidget {
             return _ResultsList(
               results: results,
               prefs: prefs,
-              isLoading: isLoading,
             );
           },
         ),
@@ -219,12 +216,10 @@ class _SkeletonColumn extends StatelessWidget {
 class _ResultsList extends StatelessWidget {
   final List<RecipeResult> results;
   final Preferences prefs;
-  final bool isLoading;
 
   const _ResultsList({
     required this.results,
     required this.prefs,
-    required this.isLoading,
   });
 
   @override
@@ -241,21 +236,6 @@ class _ResultsList extends StatelessWidget {
             // ── SAMPLE DATA ──────────────────────────────────────────────
             const SampleNotice(),
             const SizedBox(height: 16),
-
-            // ── Loading indicator ─────────────────────────────────────────
-            if (isLoading) ...[
-              Text(
-                'cooking something up…',
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                semanticsLabel: 'adapting recipe',
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              ),
-              const SizedBox(height: 16),
-            ],
 
             // ── Heading ──────────────────────────────────────────────────
             Text(
@@ -339,11 +319,6 @@ class _RecipeCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    TagChip(
-                      text: 'SAMPLE BASE RECIPE',
-                      color: colorScheme.primaryContainer,
-                      textColor: colorScheme.onPrimaryContainer,
-                    ),
                     TagChip(
                       text: '${recipe.minutes} min',
                       color: colorScheme.surfaceContainerHigh,

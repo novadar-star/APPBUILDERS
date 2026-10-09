@@ -50,3 +50,7 @@ No android/ folder exists in the workspace at this time. Flutter creates the and
 
 ### Folder scaffold created
 lib/app/, lib/core/, lib/domain/, lib/data/, lib/ml/, lib/features/{home,scan,review,results,detail}/, lib/shared/ created with stub files and placeholder screens. main.dart replaced with thin entry point calling AppShell.
+
+## Mosaic hero — 2026-10-09
+
+Decision: keep the mosaic hero image on the results screen and simplify it. The mosaic stays as the visual hero. No debug overlays or sample-data annotations are present in the mosaic widget in results_screen.dart — the mosaic is already clean. Any 'SAMPLE BASE RECIPE' chip previously rendered on each RecipeCard (separate from the mosaic) has been removed in this cleanup pass.
