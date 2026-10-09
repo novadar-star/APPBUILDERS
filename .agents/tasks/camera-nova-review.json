@@ -1,0 +1,20 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": "camera-exception-copy",
+      "label": "Non-permission CameraException copy",
+      "severity": "minor",
+      "description": "The else branch in _initCamera() sets _cameraError to the food-recognition error voice ('Oops. I couldn't tell what that is. Try another angle?') instead of e.description ?? 'Camera unavailable.' A hardware camera error will show a recognition-failure message that gives no actionable guidance.",
+      "action": "Replace the else branch value with: e.description ?? 'Camera unavailable.'"
+    },
+    {
+      "id": "nova-caption-disappears",
+      "label": "Running-camera Nova loses caption on initialization",
+      "severity": "minor",
+      "description": "The pre-init Nova overlay correctly passes caption: 'Point me at your plate.' but the cameraReady overlay omits caption. Once the camera initializes, the scanning prompt disappears — the opposite of when users most need it.",
+      "action": "Add caption: 'Point me at your plate.' to the cameraReady Nova when _novaViewfinderState == NovaState.idle."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\jolyn\\APPBUILDERS\\.agents\\tasks\\camera-nova-review.md"
+}

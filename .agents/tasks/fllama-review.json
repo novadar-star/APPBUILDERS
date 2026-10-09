@@ -1,0 +1,11 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    "fllama 0.0.1 is absent from .flutter-plugins and .flutter-plugins-dependencies — the package is unresolved and the build will fail. Run flutter pub get; if the version doesn't exist on pub.dev, correct it.",
+    "cancel() calls stopCompletion and cancels the broadcast subscription but never closes the StreamController. Callers using async-for or await stream.toList() will hang forever after cancellation.",
+    "google_fonts and device_preview in pubspec.yaml use ^ constraints, violating the project's exact-pinning policy. Pin them to exact versions.",
+    "The old 'T7 — llama.cpp binding not selected' placeholder in DECISIONS.md was not removed. Two T7 headings now coexist; the old one still claims every method throws UnimplementedError, which is incorrect.",
+    "The new T7 DECISIONS.md entry is dated 2025-07-17, a year behind all other entries in the document (2026-xx-xx). Correct the date."
+  ],
+  "reviewDoc": "c:\\Users\\jolyn\\APPBUILDERS\\.agents\\tasks\\fllama-review.md"
+}
