@@ -73,13 +73,14 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     final adaptState = ref.watch(adaptationProvider(widget.id));
     final ownedIds = ref.watch(ownedIngredientsProvider);
 
-    // Compute total cost only when bundle is loaded (avoids always-0 bug).
+    // Compute total cost only when bundle is loaded — avoids always-0 bug.
     final int totalCost = bundleAsync.maybeWhen(
       data: (bundle) {
         if (adaptState.result == null) return 0;
         return adaptState.result!.ingredients
             .where((ai) => ai.source == IngredientSource.toBuy)
-            .fold<int>(0, (sum, ai) => sum + (bundle.prices[ai.ingredientId] ?? 0));
+            .fold<int>(
+                0, (sum, ai) => sum + (bundle.prices[ai.ingredientId] ?? 0));
       },
       orElse: () => 0,
     );
@@ -155,7 +156,7 @@ class _CostFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'estimated extra spend: ₱$cost',
+                    'estimated extra spend: \u20b1$cost',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w700,
@@ -211,11 +212,11 @@ class _DetailBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── SAMPLE DATA ──────────────────────────────────────────────
+            // SAMPLE DATA notice
             const SampleNotice(),
             const SizedBox(height: 16),
 
-            // ── Recipe heading ───────────────────────────────────────────
+            // Recipe heading
             Text(
               recipe.nameFil,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -231,7 +232,7 @@ class _DetailBody extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // ── Tags ─────────────────────────────────────────────────────
+            // Tags
             Wrap(
               spacing: 6,
               runSpacing: 4,
@@ -250,11 +251,11 @@ class _DetailBody extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // ── Adaptation status banner ─────────────────────────────────
+            // Adaptation status banner
             _AdaptationBanner(adaptState: adaptState),
             const SizedBox(height: 16),
 
-            // ── Recipe content ───────────────────────────────────────────
+            // Recipe content
             if (adaptState.result != null)
               _AdaptedRecipeView(
                 adapted: adaptState.result!,
@@ -269,6 +270,10 @@ class _DetailBody extends StatelessWidget {
               ),
 
             const SizedBox(height: 20),
+
+            // OnDevice badge
+            const OnDeviceBadgeConsumer(),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -298,12 +303,23 @@ class _AdaptationBanner extends StatelessWidget {
 
   const _AdaptationBanner({required this.adaptState});
 
+  String _formatElapsed(int ms) {
+    if (ms < 1000) return '${ms}ms';
+    return '${(ms / 1000).toStringAsFixed(1)}s';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     if (adaptState.isRunning) {
+      // Live token streaming preview — last ~200 chars of raw output.
+      final rawPreview = adaptState.tokens.join();
+      final preview = rawPreview.length > 200
+          ? rawPreview.substring(rawPreview.length - 200)
+          : rawPreview;
+
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -313,32 +329,35 @@ class _AdaptationBanner extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'tweaking the recipe for you…',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        '${adaptState.tokens.length} tokens generated',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            Text(
+              'tweaking the recipe for you\u2026',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '${adaptState.tokens.length} tokens'
+              '${adaptState.elapsedMs > 0 ? ' \u00b7 ${_formatElapsed(adaptState.elapsedMs)}' : ''}',
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
               valueColor:
                   AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
+            if (preview.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                preview,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontFamily: 'monospace',
+                  height: 1.4,
+                ),
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ],
         ),
       );
@@ -348,19 +367,19 @@ class _AdaptationBanner extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: colorScheme.tertiaryContainer,
+          color: colorScheme.errorContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
             Icon(Icons.info_outline,
-                color: colorScheme.onTertiaryContainer, size: 18),
+                color: colorScheme.onErrorContainer, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'the model had trouble adapting this, so here\'s the original recipe',
+                'the model had trouble adapting this, so here\u2019s the original recipe',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onTertiaryContainer,
+                  color: colorScheme.onErrorContainer,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -371,6 +390,13 @@ class _AdaptationBanner extends StatelessWidget {
     }
 
     if (adaptState.result != null) {
+      final tokenLabel = adaptState.tokens.isNotEmpty
+          ? ' \u00b7 ${adaptState.tokens.length} tokens'
+          : '';
+      final elapsedLabel = adaptState.elapsedMs > 0
+          ? ' \u00b7 ${_formatElapsed(adaptState.elapsedMs)}'
+          : '';
+
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -379,26 +405,28 @@ class _AdaptationBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.check_circle,
-                color: colorScheme.primary, size: 18),
+            Icon(Icons.check_circle, color: colorScheme.primary, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Row(
                 children: [
-                  Text(
-                    'adapted just for you',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'adapted just for you$tokenLabel$elapsedLabel',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  if (kDebugMode)
+                  if (kDebugMode) ...[
+                    const SizedBox(width: 8),
                     TagChip(
                       text: 'MOCK',
                       color: colorScheme.tertiaryContainer,
                       textColor: colorScheme.onTertiaryContainer,
                     ),
+                  ],
                 ],
               ),
             ),
@@ -407,7 +435,7 @@ class _AdaptationBanner extends StatelessWidget {
       );
     }
 
-    // Default — not started
+    // Default — not started / model not installed
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -421,7 +449,7 @@ class _AdaptationBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'showing base recipe · language model not installed',
+              'showing base recipe \u00b7 language model not installed',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w600,
@@ -509,7 +537,7 @@ class _AdaptedRecipeView extends StatelessWidget {
         if (toBuy.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
-            label: 'you\'ll need to grab',
+            label: "you'll need to grab",
             color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 6),
@@ -522,7 +550,7 @@ class _AdaptedRecipeView extends StatelessWidget {
               trailingChip: price > 0
                   ? Chip(
                       label: Text(
-                        '₱$price',
+                        '\u20b1$price',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -539,8 +567,7 @@ class _AdaptedRecipeView extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
-        const SizedBox(height: 32),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
 
         // Steps
         Text(
@@ -621,7 +648,7 @@ class _BaseRecipeView extends StatelessWidget {
         if (owned.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.check_circle,
-            label: 'you\'ve got these',
+            label: "you've got these",
             color: colorScheme.tertiary,
           ),
           const SizedBox(height: 4),
@@ -636,7 +663,7 @@ class _BaseRecipeView extends StatelessWidget {
         if (missing.isNotEmpty) ...[
           _SectionHeading(
             icon: Icons.shopping_cart_outlined,
-            label: 'you\'ll need to grab',
+            label: "you'll need to grab",
             color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
@@ -648,8 +675,7 @@ class _BaseRecipeView extends StatelessWidget {
           const SizedBox(height: 10),
         ],
 
-        const SizedBox(height: 32),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
 
         Text(
           'how to make it',
