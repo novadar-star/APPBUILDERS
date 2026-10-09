@@ -1,0 +1,6 @@
+analyzer:
+  exclude:
+    - flutter/**
+    - build/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
