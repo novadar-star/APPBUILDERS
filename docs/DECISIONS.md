@@ -15,6 +15,14 @@
 - path_provider: 2.1.6 (pub.dev, supports Android, file paths for LLM model)
 - mocktail: 1.0.5 (pub.dev, dev-only, mocking in tests)
 
+## T6 — tflite_flutter not added
+
+`tflite_flutter` was **not** added to `pubspec.yaml`. `TfliteClassifierDetector` exists in `lib/ml/tflite_detector.dart` and implements `IngredientDetector`, but every method throws `UnimplementedError` with a descriptive message.
+
+**Reason:** The team must verify Android ABI support (armeabi-v7a / arm64-v8a) and confirm the model artifact format before the native binding can be safely added. Adding it prematurely can break Android builds silently. Once the device target is confirmed and `.tflite` files are available, add `tflite_flutter` to `pubspec.yaml` and implement `TfliteClassifierDetector.load()` / `predict()`. Reference: PRD §17.6.
+
+Until then, the app runs with `MockDetector` in debug mode and will throw in release mode if `TfliteClassifierDetector` is reached.
+
 ## T0 scaffold — 2026-10-09
 
 ### Package versions pinned for Dart SDK 3.5.4 (Flutter 3.24.5)
