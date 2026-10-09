@@ -73,17 +73,16 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     final adaptState = ref.watch(adaptationProvider(widget.id));
     final ownedIds = ref.watch(ownedIngredientsProvider);
 
-    // Compute total cost for the footer
-    int totalCost = 0;
-    if (adaptState.result != null) {
-      bundleAsync.whenData((bundle) {
-        totalCost = adaptState.result!.ingredients
+    // Compute total cost only when bundle is loaded (avoids always-0 bug).
+    final int totalCost = bundleAsync.maybeWhen(
+      data: (bundle) {
+        if (adaptState.result == null) return 0;
+        return adaptState.result!.ingredients
             .where((ai) => ai.source == IngredientSource.toBuy)
-            .fold<int>(0, (sum, ai) {
-          return sum + (bundle.prices[ai.ingredientId] ?? 0);
-        });
-      });
-    }
+            .fold<int>(0, (sum, ai) => sum + (bundle.prices[ai.ingredientId] ?? 0));
+      },
+      orElse: () => 0,
+    );
 
     return Scaffold(
       appBar: AppBar(

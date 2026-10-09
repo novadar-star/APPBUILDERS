@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:snapfood/app/providers.dart';
-import 'package:snapfood/ml/model_store.dart';
 
 // ---------------------------------------------------------------------------
 // BadgeModelStatus
@@ -160,40 +159,13 @@ class OnDeviceMini extends StatelessWidget {
 // Consumer variants — read live providers
 // ---------------------------------------------------------------------------
 
-BadgeModelStatus _mapModelStatus(ModelStatus status) {
-  switch (status) {
-    case ModelStatus.ready:
-      return BadgeModelStatus.ready;
-    case ModelStatus.loading:
-      return BadgeModelStatus.loading;
-    case ModelStatus.present:
-      return BadgeModelStatus.ready;
-    case ModelStatus.missing:
-    case ModelStatus.failed:
-      return BadgeModelStatus.setupRequired;
-  }
-}
-
 class OnDeviceBadgeConsumer extends ConsumerWidget {
   const OnDeviceBadgeConsumer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final visionAsync = ref.watch(visionModelStatusProvider);
-    final llmAsync = ref.watch(llmModelStatusProvider);
-
-    final visionBadge = visionAsync.when(
-      data: (s) => _mapModelStatus(s.status),
-      loading: () => BadgeModelStatus.loading,
-      error: (_, __) => BadgeModelStatus.setupRequired,
-    );
-
-    final llmBadge = llmAsync.when(
-      data: (s) => _mapModelStatus(s.status),
-      loading: () => BadgeModelStatus.loading,
-      error: (_, __) => BadgeModelStatus.setupRequired,
-    );
-
+    final visionBadge = ref.watch(visionBadgeStatusProvider);
+    final llmBadge = ref.watch(llmBadgeStatusProvider);
     return OnDeviceBadge(visionStatus: visionBadge, llmStatus: llmBadge);
   }
 }
@@ -203,21 +175,8 @@ class OnDeviceMiniConsumer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final visionAsync = ref.watch(visionModelStatusProvider);
-    final llmAsync = ref.watch(llmModelStatusProvider);
-
-    final visionBadge = visionAsync.when(
-      data: (s) => _mapModelStatus(s.status),
-      loading: () => BadgeModelStatus.loading,
-      error: (_, __) => BadgeModelStatus.setupRequired,
-    );
-
-    final llmBadge = llmAsync.when(
-      data: (s) => _mapModelStatus(s.status),
-      loading: () => BadgeModelStatus.loading,
-      error: (_, __) => BadgeModelStatus.setupRequired,
-    );
-
+    final visionBadge = ref.watch(visionBadgeStatusProvider);
+    final llmBadge = ref.watch(llmBadgeStatusProvider);
     return OnDeviceMini(visionStatus: visionBadge, llmStatus: llmBadge);
   }
 }

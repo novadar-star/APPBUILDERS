@@ -16,7 +16,11 @@ class PreferencesStore {
     if (equipmentList == null || equipmentList.isEmpty) {
       equipment = {Equipment.riceCooker};
     } else {
-      equipment = equipmentList.map(_equipmentFromString).toSet();
+      equipment = equipmentList
+          .map(_equipmentFromString)
+          .whereType<Equipment>()
+          .toSet();
+      if (equipment.isEmpty) equipment = {Equipment.riceCooker};
     }
 
     return Preferences(equipment: equipment, extraBudgetPesos: budget);
@@ -51,7 +55,7 @@ String _equipmentToString(Equipment e) {
   }
 }
 
-Equipment _equipmentFromString(String value) {
+Equipment? _equipmentFromString(String value) {
   switch (value) {
     case 'riceCooker':
       return Equipment.riceCooker;
@@ -62,6 +66,8 @@ Equipment _equipmentFromString(String value) {
     case 'stove':
       return Equipment.stove;
     default:
-      throw ArgumentError('Unknown equipment string: $value');
+      // Unknown string (version mismatch / corrupt prefs) — return null so
+      // the caller can filter it out instead of throwing.
+      return null;
   }
 }

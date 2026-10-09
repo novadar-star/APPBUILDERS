@@ -1,4 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera for live ingredient scan (FR-01) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Gallery access for photo fallback (FR-01) — Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Gallery access for photo fallback — Android ≤12 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <!-- Camera feature declared as not required so the app installs on
+         devices without a rear camera; photo fallback still works -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="snapfood"
         android:name="${applicationName}"

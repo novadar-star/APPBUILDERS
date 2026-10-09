@@ -13,6 +13,7 @@ import 'package:snapfood/ml/mock_llm_engine.dart';
 import 'package:snapfood/ml/model_store.dart';
 import 'package:snapfood/ml/photo_picker_service.dart';
 import 'package:snapfood/ml/tflite_detector.dart';
+import 'package:snapfood/shared/on_device_badge.dart';
 
 // ---------------------------------------------------------------------------
 // App-wide providers
@@ -65,6 +66,49 @@ final detectorProvider = Provider<IngredientDetector>((ref) {
   }
   return TfliteClassifierDetector(ref.watch(modelStoreProvider));
 });
+
+// ---------------------------------------------------------------------------
+// On-device badge status
+// ---------------------------------------------------------------------------
+
+/// Resolved badge status for the vision model.
+/// Returns [BadgeModelStatus.mock] in debug mode regardless of file presence,
+/// so the demo always shows "MOCK" when running mock implementations.
+final visionBadgeStatusProvider = Provider<BadgeModelStatus>((ref) {
+  if (kDebugMode) return BadgeModelStatus.mock;
+  final async = ref.watch(visionModelStatusProvider);
+  return async.when(
+    data: (s) => _mapModelStatus(s.status),
+    loading: () => BadgeModelStatus.loading,
+    error: (_, __) => BadgeModelStatus.setupRequired,
+  );
+});
+
+/// Resolved badge status for the LLM.
+/// Returns [BadgeModelStatus.mock] in debug mode.
+final llmBadgeStatusProvider = Provider<BadgeModelStatus>((ref) {
+  if (kDebugMode) return BadgeModelStatus.mock;
+  final async = ref.watch(llmModelStatusProvider);
+  return async.when(
+    data: (s) => _mapModelStatus(s.status),
+    loading: () => BadgeModelStatus.loading,
+    error: (_, __) => BadgeModelStatus.setupRequired,
+  );
+});
+
+BadgeModelStatus _mapModelStatus(ModelStatus status) {
+  switch (status) {
+    case ModelStatus.ready:
+      return BadgeModelStatus.ready;
+    case ModelStatus.loading:
+      return BadgeModelStatus.loading;
+    case ModelStatus.present:
+      return BadgeModelStatus.ready;
+    case ModelStatus.missing:
+    case ModelStatus.failed:
+      return BadgeModelStatus.setupRequired;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Photo picker
@@ -120,6 +164,7 @@ class AdaptationState {
   final AdaptedRecipe? result; // set when Parsed event fires
   final bool fellBack; // true if FellBack event fired
   final String? error;
+  final int elapsedMs; // wall-clock ms since generation started
 
   const AdaptationState({
     this.isRunning = false,
@@ -127,6 +172,7 @@ class AdaptationState {
     this.result,
     this.fellBack = false,
     this.error,
+    this.elapsedMs = 0,
   });
 
   AdaptationState copyWith({
@@ -135,6 +181,7 @@ class AdaptationState {
     AdaptedRecipe? result,
     bool? fellBack,
     String? error,
+    int? elapsedMs,
   }) {
     return AdaptationState(
       isRunning: isRunning ?? this.isRunning,
@@ -142,6 +189,7 @@ class AdaptationState {
       result: result ?? this.result,
       fellBack: fellBack ?? this.fellBack,
       error: error ?? this.error,
+      elapsedMs: elapsedMs ?? this.elapsedMs,
     );
   }
 }
@@ -152,6 +200,7 @@ class AdaptationNotifier extends StateNotifier<AdaptationState> {
   AdaptationNotifier(this._ref) : super(const AdaptationState());
 
   Future<void> start(AdaptRequest request) async {
+    final startTime = DateTime.now();
     state = const AdaptationState(isRunning: true);
     final service = _ref.read(adaptationServiceProvider);
     if (service == null) {
@@ -162,23 +211,35 @@ class AdaptationNotifier extends StateNotifier<AdaptationState> {
       return;
     }
     await for (final update in service.adapt(request)) {
+      final elapsed =
+          DateTime.now().difference(startTime).inMilliseconds;
       switch (update.event) {
         case AdaptationEvent.token:
           state = state.copyWith(
             tokens: [...state.tokens, update.token ?? ''],
+            elapsedMs: elapsed,
           );
           break;
         case AdaptationEvent.parsed:
           state = state.copyWith(
             isRunning: false,
             result: service.lastAdapted,
+            elapsedMs: elapsed,
           );
           break;
         case AdaptationEvent.fellBack:
-          state = state.copyWith(isRunning: false, fellBack: true);
+          state = state.copyWith(
+            isRunning: false,
+            fellBack: true,
+            elapsedMs: elapsed,
+          );
           break;
         case AdaptationEvent.failed:
-          state = state.copyWith(isRunning: false, error: update.message);
+          state = state.copyWith(
+            isRunning: false,
+            error: update.message,
+            elapsedMs: elapsed,
+          );
           break;
         default:
           break;

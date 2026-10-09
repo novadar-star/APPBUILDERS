@@ -49,21 +49,41 @@ class AdaptationService {
     final prompt = buildPrompt(request, _vocabulary);
 
     // ── Attempt 1 ──────────────────────────────────────────────────────────
-    final result1 = await _runGeneration(prompt, onToken: (t) {});
+    final tokens1 = <String>[];
+    String? engineError1;
+    bool timedOut1 = false;
 
-    if (result1.timedOut || result1.engineError != null) {
+    try {
+      await _engine
+          .generate(
+            prompt,
+            maxTokens: _config.maxTokens,
+            temperature: _config.temperature,
+            topP: _config.topP,
+          )
+          .timeout(Duration(seconds: _config.timeoutSeconds))
+          .forEach((token) {
+        tokens1.add(token);
+      });
+    } on TimeoutException {
+      timedOut1 = true;
+    } catch (e) {
+      engineError1 = e.toString();
+    }
+
+    if (timedOut1 || engineError1 != null) {
       yield AdaptationUpdate(
         event: AdaptationEvent.fellBack,
-        message: result1.engineError ?? 'timeout',
+        message: engineError1 ?? 'timeout',
       );
       return;
     }
 
-    for (final t in result1.tokens) {
+    for (final t in tokens1) {
       yield AdaptationUpdate(event: AdaptationEvent.token, token: t);
     }
 
-    final raw1 = result1.tokens.join();
+    final raw1 = tokens1.join();
     final parsed1 = parseAdaptedRecipe(raw1);
     final errors1 = parsed1.success
         ? validateAdaptedRecipe(parsed1.recipe!, request, vocabIds, _prices)
@@ -85,21 +105,43 @@ class AdaptationService {
 
     final retryPrompt =
         '$prompt\nPrevious attempt had these problems: ${blockingErrors1.join(', ')}';
-    final result2 = await _runGeneration(retryPrompt, onToken: (t) {});
 
-    if (result2.timedOut || result2.engineError != null) {
+    final tokens2 = <String>[];
+    String? engineError2;
+    bool timedOut2 = false;
+
+    try {
+      await _engine
+          .generate(
+            retryPrompt,
+            maxTokens: _config.maxTokens,
+            temperature: _config.temperature,
+            topP: _config.topP,
+          )
+          .timeout(Duration(seconds: _config.timeoutSeconds))
+          .forEach((token) {
+        tokens2.add(token);
+      });
+    } on TimeoutException {
+      timedOut2 = true;
+    } catch (e) {
+      engineError2 = e.toString();
+    }
+
+    if (timedOut2 || engineError2 != null) {
       yield AdaptationUpdate(
         event: AdaptationEvent.fellBack,
-        message: result2.engineError ?? 'timeout',
+        message: engineError2 ?? 'timeout',
       );
       return;
     }
 
-    for (final t in result2.tokens) {
+    // Stream retry tokens live so the UI can show them.
+    for (final t in tokens2) {
       yield AdaptationUpdate(event: AdaptationEvent.token, token: t);
     }
 
-    final raw2 = result2.tokens.join();
+    final raw2 = tokens2.join();
     final parsed2 = parseAdaptedRecipe(raw2);
     final errors2 = parsed2.success
         ? validateAdaptedRecipe(parsed2.recipe!, request, vocabIds, _prices)
@@ -119,45 +161,4 @@ class AdaptationService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Internal helpers
-  // ---------------------------------------------------------------------------
-
-  Future<_GenerationResult> _runGeneration(
-    String prompt, {
-    required void Function(String) onToken,
-  }) async {
-    final tokens = <String>[];
-    try {
-      await _engine
-          .generate(
-            prompt,
-            maxTokens: _config.maxTokens,
-            temperature: _config.temperature,
-            topP: _config.topP,
-          )
-          .timeout(Duration(seconds: _config.timeoutSeconds))
-          .forEach((token) {
-        tokens.add(token);
-        onToken(token);
-      });
-      return _GenerationResult(tokens: tokens);
-    } on TimeoutException {
-      return _GenerationResult(tokens: tokens, timedOut: true);
-    } catch (e) {
-      return _GenerationResult(tokens: tokens, engineError: e.toString());
-    }
-  }
-}
-
-class _GenerationResult {
-  final List<String> tokens;
-  final bool timedOut;
-  final String? engineError;
-
-  const _GenerationResult({
-    required this.tokens,
-    this.timedOut = false,
-    this.engineError,
-  });
 }
