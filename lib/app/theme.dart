@@ -9,7 +9,7 @@ ThemeData buildAppTheme() {
       surface: const Color(0xFFF7F5EF),
     ),
     fontFamily: 'Roboto',
-    cardTheme: CardThemeData(
+    cardTheme: CardTheme(
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
