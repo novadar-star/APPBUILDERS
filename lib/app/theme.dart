@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ---------------------------------------------------------------------------
 // SnapFoodShapes — ThemeExtension carrying shape radii
@@ -88,7 +89,9 @@ ThemeData _buildFromColorScheme(ColorScheme colorScheme) {
     useMaterial3: true,
     colorScheme: colorScheme,
     scaffoldBackgroundColor: colorScheme.surface,
-    fontFamily: 'Roboto',
+    textTheme: GoogleFonts.nunitoTextTheme(colorScheme.brightness == Brightness.dark
+        ? ThemeData.dark().textTheme
+        : ThemeData.light().textTheme),
     extensions: const [shapes],
 
     // Card
