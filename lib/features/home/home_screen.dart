@@ -1,10 +1,9 @@
-// HomeScreen — T9
+// HomeScreen — T9 (curated asymmetric layout)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
-import 'package:snapfood/shared/on_device_badge.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -18,39 +17,59 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Food-hero area ─────────────────────────────────────────
-              Container(
-                height: 220,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.restaurant_menu,
-                    size: 80,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+              const SizedBox(height: 24),
+
+              // ── Upper hero zone — illustration floats top-right, title bottom-left ──
+              SizedBox(
+                height: 200,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Illustration — upper right
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 48,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+
+                    // Title — bottom left
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 80,
+                      child: Text(
+                        "What's in your\nkitchen?",
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
 
-              // ── Hero heading ───────────────────────────────────────────
-              Text(
-                'What\'s in your\nkitchen?',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
 
-              // ── Subtitle ───────────────────────────────────────────────
+              // ── Subtitle — left-aligned ────────────────────────────────
               Text(
                 'Sweep your camera over your ingredients and we\'ll find something to cook.',
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -58,14 +77,15 @@ class HomeScreen extends ConsumerWidget {
                   height: 1.5,
                 ),
               ),
+
               const SizedBox(height: 20),
 
-              // ── SAMPLE DATA ────────────────────────────────────────────
+              // ── SAMPLE DATA notice ─────────────────────────────────────
               const SampleNotice(),
-              const SizedBox(height: 16),
 
               // ── Ingredient count if any are already confirmed ──────────
               if (ownedIngredients.isNotEmpty) ...[
+                const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => context.go('/review'),
                   child: Container(
@@ -92,10 +112,37 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
 
-              // ── Primary CTA ────────────────────────────────────────────
+              const Spacer(),
+
+              // ── On-device badge — centered ─────────────────────────────
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade600,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'runs on your phone',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Primary CTA — full width ───────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -110,6 +157,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
 
               // ── Secondary CTA ──────────────────────────────────────────
@@ -125,41 +173,8 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // ── THE IDEA section ───────────────────────────────────────
-              Text(
-                'THE IDEA',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.4,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'SnapFood uses your phone\'s camera to identify what ingredients you already have. '
-                'It then finds Filipino dorm-friendly recipes that match — and adapts them on-device '
-                'so nothing leaves your phone.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'No internet needed. No data shared. Just good food.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // ── OnDevice badge ─────────────────────────────────────────
-              const OnDeviceBadgeConsumer(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
             ],
           ),
         ),
