@@ -1,19 +1,194 @@
+// HomeScreen — T9
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/shared/on_device_badge.dart';
+import 'package:snapfood/shared/sample_notice.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownedIngredients = ref.watch(ownedIngredientsProvider);
+    final theme = Theme.of(context);
+
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Home', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('SnapFood', style: Theme.of(context).textTheme.titleMedium),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Top bar ────────────────────────────────────────────────
+              Row(
+                children: [
+                  const Icon(
+                    Icons.restaurant,
+                    color: Color(0xFF1C684E),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'snapfood',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: const Color(0xFF1C684E),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  const OnDeviceMiniConsumer(),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // ── Hero card ──────────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5EEE5),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'DORM COOKING, MADE SIMPLE',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: const Color(0xFF1C684E),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'What can you cook with what you have?',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: const Color(0xFF0E3D2A),
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Find a Filipino favorite for your small kitchen and your budget.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF2D5040),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Ingredient count if any are already confirmed
+                    if (ownedIngredients.isNotEmpty) ...[
+                      GestureDetector(
+                        onTap: () => context.go('/review'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1C684E).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle,
+                                  size: 16, color: Color(0xFF1C684E)),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${ownedIngredients.length} ingredient${ownedIngredients.length == 1 ? '' : 's'} confirmed — tap to review',
+                                style: const TextStyle(
+                                  color: Color(0xFF1C684E),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Primary CTA
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: () => context.go('/scan'),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text(
+                          'Scan ingredients',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Secondary CTA
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go('/review'),
+                        icon: const Icon(Icons.edit_note),
+                        label: const Text(
+                          'Add ingredients manually',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── SAMPLE DATA notice ─────────────────────────────────────
+              const SampleNotice(),
+              const SizedBox(height: 20),
+
+              // ── THE IDEA section ───────────────────────────────────────
+              Text(
+                'THE IDEA',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: const Color(0xFF596357),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.4,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'SnapFood uses your phone\'s camera to identify what ingredients you already have. '
+                'It then finds Filipino dorm-friendly recipes that match — and adapts them on-device '
+                'so nothing leaves your phone.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[700],
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No internet needed. No data shared. Just good food.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF1C684E),
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ── OnDevice badge ─────────────────────────────────────────
+              const OnDeviceBadgeConsumer(),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
