@@ -1,10 +1,17 @@
-// HomeScreen — T9 (curated asymmetric layout)
+// HomeScreen — T9 (curated asymmetric layout, Apple HIG pass)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
+import 'package:snapfood/app/theme.dart';
 import 'package:snapfood/shared/sample_notice.dart';
+
+// Pantry words shown in the hero mosaic — Filipino staples, dorm-friendly
+const List<String> _pantryWords = [
+  'Toyo', 'Bawang', 'Sibuyas', 'Kamatis', 'Asin',
+  'Mantika', 'Itlog', 'Bigas', 'Paminta', 'Luya',
+];
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -14,6 +21,7 @@ class HomeScreen extends ConsumerWidget {
     final ownedIngredients = ref.watch(ownedIngredientsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = theme.extension<SnapFoodShapes>();
 
     return Scaffold(
       body: SafeArea(
@@ -24,32 +32,24 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 24),
 
-              // ── Upper hero zone — illustration floats top-right, title bottom-left ──
+              // ── Upper hero zone — mosaic top-right, title bottom-left ──
               SizedBox(
                 height: 200,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Illustration — upper right
+                    // Ingredient mosaic — upper right
                     Positioned(
                       top: 0,
                       right: 0,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 48,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
+                      child: _IngredientMosaic(
+                        words: _pantryWords,
+                        colorScheme: colorScheme,
+                        shapes: shapes,
                       ),
                     ),
 
-                    // Title — bottom left
+                    // Title — bottom left, w700 (reserve w800 for recipe names)
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -57,7 +57,7 @@ class HomeScreen extends ConsumerWidget {
                       child: Text(
                         "What's in your\nkitchen?",
                         style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: -0.5,
                           color: colorScheme.onSurface,
                         ),
@@ -69,7 +69,7 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // ── Subtitle — left-aligned ────────────────────────────────
+              // ── Subtitle ────────────────────────────────────────────────
               Text(
                 'Sweep your camera over your ingredients and we\'ll find something to cook.',
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -80,35 +80,40 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // ── SAMPLE DATA notice ─────────────────────────────────────
+              // ── SAMPLE DATA notice ──────────────────────────────────────
               const SampleNotice(),
 
-              // ── Ingredient count if any are already confirmed ──────────
+              // ── Ingredient count — InkWell with 44dp min target + haptic ──
               if (ownedIngredients.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () => context.go('/review'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle,
-                            size: 16, color: colorScheme.primary),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${ownedIngredients.length} ingredient${ownedIngredients.length == 1 ? '' : 's'} confirmed — tap to review',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w600,
+                Material(
+                  color: colorScheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(shapes?.input ?? 12),
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      context.go('/review');
+                    },
+                    borderRadius: BorderRadius.circular(shapes?.input ?? 12),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle,
+                              size: 16, color: colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${ownedIngredients.length} ingredient${ownedIngredients.length == 1 ? '' : 's'} confirmed — tap to review',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -116,7 +121,7 @@ class HomeScreen extends ConsumerWidget {
 
               const Spacer(),
 
-              // ── On-device badge — centered ─────────────────────────────
+              // ── On-device badge — one canonical placement, bottom center ──
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -142,7 +147,7 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // ── Primary CTA — full width ───────────────────────────────
+              // ── Primary CTA ─────────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -160,12 +165,15 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // ── Secondary CTA ──────────────────────────────────────────
+              // ── Secondary CTA — haptic added ────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: OutlinedButton.icon(
-                  onPressed: () => context.go('/review'),
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    context.go('/review');
+                  },
                   icon: const Icon(Icons.edit_note),
                   label: const Text(
                     'Add ingredients manually',
@@ -178,6 +186,67 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _IngredientMosaic — pantry word cloud, product-specific hero element
+// ---------------------------------------------------------------------------
+
+class _IngredientMosaic extends StatelessWidget {
+  final List<String> words;
+  final ColorScheme colorScheme;
+  final SnapFoodShapes? shapes;
+
+  const _IngredientMosaic({
+    required this.words,
+    required this.colorScheme,
+    required this.shapes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // Alternate between two tones for visual rhythm
+    final colors = [
+      colorScheme.primaryContainer,
+      colorScheme.surfaceContainerHigh,
+    ];
+    final textColors = [
+      colorScheme.onPrimaryContainer,
+      colorScheme.onSurfaceVariant,
+    ];
+
+    return SizedBox(
+      width: 160,
+      height: 160,
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: words.asMap().entries.map((entry) {
+          final i = entry.key;
+          final word = entry.value;
+          final bg = colors[i % 2];
+          final fg = textColors[i % 2];
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius:
+                  BorderRadius.circular(shapes?.chip ?? 8.0),
+            ),
+            child: Text(
+              word,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

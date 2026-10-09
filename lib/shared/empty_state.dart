@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snapfood/app/theme.dart';
 
 /// Generic empty-state widget with icon placeholder, title, body text,
 /// and optional CTA button.
@@ -22,6 +23,7 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = theme.extension<SnapFoodShapes>();
 
     return Center(
       child: Padding(
@@ -29,13 +31,13 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Illustration placeholder container
+            // Illustration placeholder — uses badge token (24dp)
             Container(
               width: 120,
               height: 120,
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(shapes?.badge ?? 24.0),
               ),
               child: Icon(
                 icon,

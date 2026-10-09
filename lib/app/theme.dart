@@ -12,12 +12,15 @@ class SnapFoodShapes extends ThemeExtension<SnapFoodShapes> {
     this.input = 12.0,
     this.chip = 8.0,
     this.actionButton = 28.0,
+    this.badge = 24.0,
   });
 
   final double card;
   final double input;
   final double chip;
   final double actionButton;
+  /// Illustration / icon container radius (e.g. EmptyState placeholder)
+  final double badge;
 
   @override
   SnapFoodShapes copyWith({
@@ -25,12 +28,14 @@ class SnapFoodShapes extends ThemeExtension<SnapFoodShapes> {
     double? input,
     double? chip,
     double? actionButton,
+    double? badge,
   }) {
     return SnapFoodShapes(
       card: card ?? this.card,
       input: input ?? this.input,
       chip: chip ?? this.chip,
       actionButton: actionButton ?? this.actionButton,
+      badge: badge ?? this.badge,
     );
   }
 
@@ -42,6 +47,7 @@ class SnapFoodShapes extends ThemeExtension<SnapFoodShapes> {
       input: lerpDouble(this.input, other.input, t)!,
       chip: lerpDouble(this.chip, other.chip, t)!,
       actionButton: lerpDouble(this.actionButton, other.actionButton, t)!,
+      badge: lerpDouble(this.badge, other.badge, t)!,
     );
   }
 

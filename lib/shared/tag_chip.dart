@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snapfood/app/theme.dart';
 
 /// Small rounded display chip with bold text.
 /// Uses RawChip with onPressed: null for Material 3 chip shape/padding.
@@ -16,22 +17,24 @@ class TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallbackTextColor =
-        textColor ?? Theme.of(context).colorScheme.onSurface;
+    final theme = Theme.of(context);
+    final shapes = theme.extension<SnapFoodShapes>();
+    final radius = shapes?.chip ?? 8.0;
+    final fallbackTextColor = textColor ?? theme.colorScheme.onSurface;
     return RawChip(
       isEnabled: false,
       onPressed: null,
       label: Text(
         text,
-        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.4,
+        style: (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
           color: fallbackTextColor,
         ),
       ),
       backgroundColor: color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(radius),
         side: BorderSide.none,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),

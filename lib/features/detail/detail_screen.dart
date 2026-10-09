@@ -270,10 +270,6 @@ class _DetailBody extends StatelessWidget {
               ),
 
             const SizedBox(height: 20),
-
-            // ── OnDevice badge ───────────────────────────────────────────
-            const OnDeviceBadgeConsumer(),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -353,19 +349,19 @@ class _AdaptationBanner extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: colorScheme.errorContainer,
+          color: colorScheme.tertiaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
             Icon(Icons.info_outline,
-                color: colorScheme.onErrorContainer, size: 18),
+                color: colorScheme.onTertiaryContainer, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'the model had trouble adapting this, so here\'s the original recipe',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onErrorContainer,
+                  color: colorScheme.onTertiaryContainer,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -764,6 +760,7 @@ class _StepRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = theme.extension<SnapFoodShapes>();
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -774,7 +771,7 @@ class _StepRow extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(shapes?.chip ?? 8.0),
             ),
             child: Center(
               child: Text(

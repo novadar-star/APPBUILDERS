@@ -293,10 +293,6 @@ class _ResultsList extends StatelessWidget {
               ),
 
             const SizedBox(height: 16),
-
-            // ── OnDevice badge ───────────────────────────────────────────
-            const OnDeviceBadgeConsumer(),
-            const SizedBox(height: 8),
           ],
         ),
       ),
