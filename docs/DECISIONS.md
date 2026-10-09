@@ -15,6 +15,16 @@
 - path_provider: 2.1.6 (pub.dev, supports Android, file paths for LLM model)
 - mocktail: 1.0.5 (pub.dev, dev-only, mocking in tests)
 
+## T7 — llama.cpp binding not selected
+
+No llama.cpp Flutter binding has been added to `pubspec.yaml`. `LlamaCppEngine` exists in `lib/ml/llama_cpp_engine.dart` and implements `LlmEngine`, but every method throws `UnimplementedError` with a descriptive message.
+
+**Reason:** Three candidates are under evaluation — `fllama`, `llama_cpp_dart`, and `flutter_gemma`. The team must verify Android ABI support (armeabi-v7a / arm64-v8a) and confirm license compatibility on the actual target device before adding any native binding. Adding prematurely can break Android builds silently.
+
+**Next steps:** Once the device target and `.gguf` model artifact are confirmed, pick one binding, add it to `pubspec.yaml`, and implement `LlamaCppEngine.load()` / `generate()`. Reference: PRD §17.8.
+
+Until then, the app runs with `MockLlmEngine` in debug mode and will throw in release mode if `LlamaCppEngine` is reached.
+
 ## T6 — tflite_flutter not added
 
 `tflite_flutter` was **not** added to `pubspec.yaml`. `TfliteClassifierDetector` exists in `lib/ml/tflite_detector.dart` and implements `IngredientDetector`, but every method throws `UnimplementedError` with a descriptive message.
