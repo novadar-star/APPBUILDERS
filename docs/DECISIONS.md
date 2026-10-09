@@ -54,3 +54,12 @@ lib/app/, lib/core/, lib/domain/, lib/data/, lib/ml/, lib/features/{home,scan,re
 ## Mosaic hero — 2026-10-09
 
 Decision: keep the mosaic hero image on the results screen and simplify it. The mosaic stays as the visual hero. No debug overlays or sample-data annotations are present in the mosaic widget in results_screen.dart — the mosaic is already clean. Any 'SAMPLE BASE RECIPE' chip previously rendered on each RecipeCard (separate from the mosaic) has been removed in this cleanup pass.
+
+## T7 — fllama selected as llama.cpp binding — 2025-07-17
+Package: fllama (pub.dev), pinned at 0.0.1
+License: MIT
+Reason: GGUF format, Android arm64-v8a / armeabi-v7a / x86_64, compatible with Dart SDK >=3.3.0,
+streaming token API maps cleanly onto LlmEngine.generate() Stream<String>,
+no minSdk bump required.
+Next steps: place a quantized .gguf model file (1B–3B, 4-bit) in the device's
+models directory (use ModelStore.getLlmModelPath()), run on physical device and confirm streaming works.
