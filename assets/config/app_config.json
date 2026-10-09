@@ -1,0 +1,1 @@
+{"scan":{"intervalMs":700,"windowSize":10,"minHits":3,"minConfidence":0.6,"photoMinConfidence":0.3,"topK":3},"retrieval":{"limit":3,"minOwnedCoreRatio":0.5},"llm":{"temperature":0.3,"topP":0.9,"maxTokens":400,"contextSize":2048,"timeoutSeconds":60,"maxRetries":1},"budgetPresets":[0,30,50,100],"defaultBudget":30}
