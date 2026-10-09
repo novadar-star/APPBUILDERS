@@ -9,7 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:snapfood/app/providers.dart';
 import 'package:snapfood/domain/models.dart';
 import 'package:snapfood/domain/retrieval.dart';
-import 'package:snapfood/shared/empty_state.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/on_device_badge.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 import 'package:snapfood/shared/tag_chip.dart';
@@ -198,10 +199,18 @@ class _SkeletonColumn extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          children: const [
-            _SkeletonCard(),
-            _SkeletonCard(),
-            _SkeletonCard(),
+          children: [
+            Center(
+              child: NovaWidget(
+                state: NovaState.thinking,
+                size: 100,
+                caption: 'Hmm, let me look closer\u2026',
+              ),
+            ),
+            const SizedBox(height: 16),
+            const _SkeletonCard(),
+            const _SkeletonCard(),
+            const _SkeletonCard(),
           ],
         ),
       ),
@@ -256,10 +265,15 @@ class _ResultsList extends StatelessWidget {
 
             // ── Empty state ──────────────────────────────────────────────
             if (results.isEmpty)
-              const EmptyState(
-                icon: Icons.no_food_outlined,
-                title: 'hmm, nothing matched.',
-                body: 'try adding more ingredients.',
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: NovaWidget(
+                    state: NovaState.error,
+                    size: 100,
+                    caption: "I can't work with that yet. More ingredients?",
+                  ),
+                ),
               )
             else
               ListView.builder(

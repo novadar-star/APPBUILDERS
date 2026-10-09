@@ -18,7 +18,6 @@ class AppShell extends StatelessWidget {
         routerConfig: appRouter,
         // DevicePreview hooks — safe to leave in; no-ops when DevicePreview
         // is disabled or not in the widget tree.
-        useInheritedMediaQuery: true,
         locale: DevicePreview.locale(context),
         builder: DevicePreview.appBuilder,
       ),

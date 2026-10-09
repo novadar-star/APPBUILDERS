@@ -10,6 +10,8 @@ import 'package:snapfood/app/theme.dart';
 import 'package:snapfood/data/asset_loader.dart';
 import 'package:snapfood/data/preferences_store.dart';
 import 'package:snapfood/domain/models.dart';
+import 'package:snapfood/shared/nova/nova_state.dart';
+import 'package:snapfood/shared/nova/nova_widget.dart';
 import 'package:snapfood/shared/on_device_badge.dart';
 import 'package:snapfood/shared/sample_notice.dart';
 
@@ -105,7 +107,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ],
       ),
       body: bundleAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NovaWidget(state: NovaState.thinking, size: 100),
+              const SizedBox(height: 16),
+              const CircularProgressIndicator(),
+            ],
+          ),
+        ),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (bundle) => _buildBody(context, theme, bundle, ownedIds),
       ),
@@ -179,10 +190,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 }).toList(),
               ),
             if (ownedIds.isEmpty)
-              Text(
-                'nothing here yet — try scanning or add ingredients below',
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant),
+              Center(
+                child: NovaWidget(
+                  state: NovaState.idle,
+                  size: 80,
+                  caption: "I'm ready. Tell me what's in your kitchen.",
+                ),
               ),
             const SizedBox(height: 14),
 
