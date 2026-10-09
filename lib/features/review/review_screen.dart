@@ -263,7 +263,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
               ),
 
-            const Divider(height: 28),
+            const SizedBox(height: 32),
 
             // ── Equipment section ────────────────────────────────────────
             Text(

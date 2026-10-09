@@ -489,7 +489,7 @@ class _AdaptedRecipeView extends StatelessWidget {
                 qty: ai.qtyText,
                 color: colorScheme.primaryContainer,
               )),
-          Divider(height: 24, color: colorScheme.outlineVariant),
+          const SizedBox(height: 24),
         ],
 
         // Section B — Substitutions
@@ -507,7 +507,7 @@ class _AdaptedRecipeView extends StatelessWidget {
                 qty: ai.qtyText,
                 color: colorScheme.tertiaryContainer,
               )),
-          Divider(height: 24, color: colorScheme.outlineVariant),
+          const SizedBox(height: 24),
         ],
 
         // Section C — Items to buy
@@ -544,7 +544,7 @@ class _AdaptedRecipeView extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
-        const Divider(),
+        const SizedBox(height: 32),
         const SizedBox(height: 10),
 
         // Steps
@@ -635,7 +635,7 @@ class _BaseRecipeView extends StatelessWidget {
                 qty: '${ri.qty} ${ri.unit}',
                 color: colorScheme.primaryContainer,
               )),
-          Divider(height: 24, color: colorScheme.outlineVariant),
+          const SizedBox(height: 24),
         ],
 
         if (missing.isNotEmpty) ...[
@@ -653,7 +653,7 @@ class _BaseRecipeView extends StatelessWidget {
           const SizedBox(height: 10),
         ],
 
-        const Divider(),
+        const SizedBox(height: 32),
         const SizedBox(height: 10),
 
         Text(
