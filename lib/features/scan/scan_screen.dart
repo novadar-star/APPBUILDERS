@@ -268,8 +268,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   onPressed: _onDone,
                   child: const Text(
                     'Done — go to review',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),

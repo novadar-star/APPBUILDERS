@@ -51,7 +51,7 @@ class OnDeviceBadge extends StatelessWidget {
       iconColor = colorScheme.onSurfaceVariant;
     } else if (bothReady) {
       label = 'On-device models · Ready';
-      iconColor = const Color(0xFF388E3C);
+      iconColor = colorScheme.tertiary;
     } else {
       label = 'On-device models · Setup required';
       iconColor = colorScheme.onSurfaceVariant;
@@ -132,7 +132,7 @@ class OnDeviceMini extends StatelessWidget {
       color = colorScheme.primary;
     } else if (bothReady) {
       tag = 'ON DEVICE · READY';
-      color = const Color(0xFF388E3C);
+      color = colorScheme.tertiary;
     } else {
       tag = 'ON DEVICE · SETUP REQD';
       color = colorScheme.onSurfaceVariant;

@@ -480,7 +480,7 @@ class _AdaptedRecipeView extends StatelessWidget {
           _SectionHeading(
             icon: Icons.check_circle,
             label: 'You already have',
-            color: const Color(0xFF388E3C),
+            color: colorScheme.tertiary,
           ),
           const SizedBox(height: 6),
           ...owned.map((ai) => _IngredientRow(
@@ -496,7 +496,7 @@ class _AdaptedRecipeView extends StatelessWidget {
           _SectionHeading(
             icon: Icons.swap_horiz,
             label: 'Substitutions',
-            color: Colors.amber.shade700,
+            color: colorScheme.tertiary,
           ),
           const SizedBox(height: 6),
           ...substituted.map((ai) => _IngredientRow(
@@ -626,7 +626,7 @@ class _BaseRecipeView extends StatelessWidget {
           _SectionHeading(
             icon: Icons.check_circle,
             label: 'You have',
-            color: const Color(0xFF388E3C),
+            color: colorScheme.tertiary,
           ),
           const SizedBox(height: 4),
           ...owned.map((ri) => _IngredientRow(

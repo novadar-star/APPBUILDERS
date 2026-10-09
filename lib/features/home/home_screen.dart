@@ -106,8 +106,7 @@ class HomeScreen extends ConsumerWidget {
                   },
                   child: const Text(
                     'Start Scanning',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -122,8 +121,7 @@ class HomeScreen extends ConsumerWidget {
                   icon: const Icon(Icons.edit_note),
                   label: const Text(
                     'Add ingredients manually',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

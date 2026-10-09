@@ -254,9 +254,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   onPressed: () {
                     ref.read(ownedIngredientsProvider.notifier).state = {};
                   },
-                  child: const Text(
+                  child: Text(
                     'Clear all',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: colorScheme.error),
                   ),
                 ),
               ),
@@ -365,7 +365,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 child: const Text(
                   'Find recipes',
                   style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ),
